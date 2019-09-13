@@ -12,4 +12,4 @@ I am currently working on extending the SystemVerilog to perform AES-192 and AES
 
 ## Related Work
 
-Several of these modules are generalized and could be used in othe projects. I keep all of my multi-purpose SystemVerilog modules in my other git repo, SV-Toolbox (link).
+Several of these modules are generalized and could be used in othe projects. I keep all of my multi-purpose SystemVerilog modules in my other git repo, [SV-Toolbox](https://github.com/onesmallskipforman/SV-Toolbox).
