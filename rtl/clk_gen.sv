@@ -37,6 +37,6 @@ module clk_gen  #(parameter sc_f = 10**6,
   counter #(sc_bits) c(clk, reset, en, inc);
 
   // assign sc to correct bit of inc
-  assign sc = inc[sc_bits];
+  assign sc = inc[sc_bits-1];
 
 endmodule

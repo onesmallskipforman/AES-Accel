@@ -47,7 +47,7 @@ module keyexpansion (input  logic          clk, reset,
     end else begin
       state       <= nextstate;
       lastBlock   <= wBlock;
-      rcon[31:23] <= {rconFront, 24'b0};
+      rcon[31:23] <= rconFront;
     end
 
   always_comb

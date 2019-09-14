@@ -35,7 +35,7 @@ module cipher (input  logic         clk,
 
   logic [127:0] nextStm, stm, bStm, hStm, mStm;
 
-  typedef enum logic {S0, S1} statetype;
+  typedef enum logic [1:0] {S0, S1, S2} statetype;
   statetype state, nextstate;
 
   always_ff @(posedge clk)

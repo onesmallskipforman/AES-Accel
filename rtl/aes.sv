@@ -34,7 +34,7 @@ module aes(input  logic clk,
 
   logic [127:0] key, plaintext, cyphertext;
 
-  aes_spi  spi(r_clk, r_mosi, done, cyphertext, r_miso, key, plaintext);
+  aes_spi  spi(r_sclk, r_mosi, done, cyphertext, r_miso, key, plaintext);
   aes_core core(clk, r_ce, key, plaintext, done, cyphertext);
 
 endmodule
