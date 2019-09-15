@@ -64,7 +64,7 @@ module sbox(input  logic [7:0] a,
   // sbox implemented as a ROM
   logic [7:0] sbox[0:255];
 
-  initial $readmemh("/home/skipper/Desktop/AES-Accel/rtl/sbox.txt", sbox);
+  initial $readmemh("sbox.txt", sbox);
   assign y = sbox[a];
 
 endmodule
