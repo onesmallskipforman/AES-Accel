@@ -11,6 +11,7 @@
 
   Inputs:
     clk:    sytem clock signal
+    reset:  reset signal
     r_sclk: pi (master) spi clock
     r_mosi: pi mosi
     r_ce:   chip enable (or load). high during conversion
@@ -25,7 +26,7 @@
     cyphertext[127:0]: encrypted 128-bit message
 */
 
-module aes(input  logic clk,
+module aes(input  logic clk, reset,
            input  logic r_sclk,
            input  logic r_mosi,
            input  logic r_ce,
@@ -35,6 +36,6 @@ module aes(input  logic clk,
   logic [127:0] key, plaintext, cyphertext;
 
   aes_spi  spi(r_sclk, r_mosi, done, cyphertext, r_miso, key, plaintext);
-  aes_core core(clk, r_ce, key, plaintext, done, cyphertext);
+  aes_core core(clk, reset, r_ce, key, plaintext, done, cyphertext);
 
 endmodule

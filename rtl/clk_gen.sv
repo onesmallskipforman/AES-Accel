@@ -34,7 +34,7 @@ module clk_gen  #(parameter sc_f = 10**6,
   logic [sc_bits-1:0] inc;                // variable incremented by counter
 
   // implement counter
-  counter #(sc_bits) c(clk, reset, en, inc);
+  counter #(sc_bits) c(clk, reset, en, 1'b1, inc);
 
   // assign sc to correct bit of inc
   assign sc = inc[sc_bits-1];

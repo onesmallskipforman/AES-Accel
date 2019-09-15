@@ -34,7 +34,7 @@
     slwclk:            4 MHz slower clock signal driving the cycle
 */
 
-module aes_core(input  logic         clk,
+module aes_core(input  logic         clk, reset,
                 input  logic         ce,
                 input  logic [127:0] key,
                 input  logic [127:0] plaintext,
@@ -46,8 +46,8 @@ module aes_core(input  logic         clk,
   logic         slwclk;
 
   // generate 5 MHz clock for cycles
-  clk_gen #(5 * (10**6)) sck(clk, 0, 1, slwclk);
-  counter #(4)           cnt(slwclk, ce, !done, 1, countval);
+  clk_gen #(5 * (10**6)) sck(clk, reset, 1'b1, slwclk);
+  counter #(4)           cnt(slwclk, ce, !done, 1'b1, countval);
 
   // send key a 4-word key schedule to cipher each cycle
   keyexpansion  ke0(slwclk, ce, done, key, wBlock);

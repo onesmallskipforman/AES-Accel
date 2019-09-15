@@ -4,13 +4,13 @@
 /////////////////////////////////////////////
 
 module testbench();
-  logic clk, load, done, sck, sdi, sdo;
+  logic clk, reset, load, done, sck, sdi, sdo;
   logic [127:0] key, plaintext, cyphertext, expected;
   logic [255:0] comb;
   logic [8:0] i;
 
   // device under test
-  aes dut(clk, sck, sdi, sdo, load, done);
+  aes dut(clk, reset, sck, sdi, load, sdo, done);
 
   // test case
   initial begin
@@ -33,6 +33,7 @@ module testbench();
     end
 
   initial begin
+    reset = 1'b1; #1; reset = 1'b0;
     i = 0;
     load = 1'b0; #10; load = 1'b1;
   end

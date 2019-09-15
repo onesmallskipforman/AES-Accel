@@ -32,7 +32,7 @@ module keyexpansion (input  logic          clk, reset,
                      input  logic [127:0]  key,
                      output logic [127:0]  wBlock);
 
-  logic [31:0]  rcon, rotTemp, subTemp, rconTemp;
+  logic [31:0]  rcon, nextrcon, rotTemp, subTemp, rconTemp;
   logic [127:0] lastBlock, temp;
   logic [7:0]   rconFront;
 
@@ -42,12 +42,12 @@ module keyexpansion (input  logic          clk, reset,
   always_ff @(posedge clk)
     if (reset) begin
       state       <= S0;
-      lastBlock   <= key;
-      rcon        <= 32'h00800000;
+      lastBlock   <= 32'b0;
+      rcon        <= 32'h01000000;
     end else begin
       state       <= nextstate;
       lastBlock   <= wBlock;
-      rcon[31:23] <= rconFront;
+      rcon        <= nextrcon;
     end
 
   always_comb
@@ -70,6 +70,7 @@ module keyexpansion (input  logic          clk, reset,
     temp[31:0]   = lastBlock[31:0]   ^ temp[63:32];
   end
 
-  assign wBlock = ( !done & (state == S1) )? temp:lastBlock;
+  assign nextrcon = (state == S0)? rcon:{rconFront, 24'b0}; 
+  assign wBlock   = (state == S1)? temp:key;
 
 endmodule
