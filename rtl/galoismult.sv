@@ -13,10 +13,14 @@
     N: power of x to multiply a by in GF(2^8)
 
   Inputs:
-    a[31:0]:  state matrix column
+    a[31:0]:  original byte
 
   Outputs:
-    y[127:0]: transformed column
+    y[127:0]: byte multiplied by x^N in GF(2^8)
+
+  Internal Variables:
+    powers[8*(N+1)-1:0]: 8N-bit object that holds input multiplied by negative powers of x
+    ashift[8*(N+1)-1:0]: entried of powers shifted to the left by one bit
 */
 
 module galoismult #(parameter N = 1)

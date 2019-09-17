@@ -57,9 +57,9 @@ module keyexpansion (input  logic          clk, reset,
       default: nextstate = S0;
     endcase
 
-  rotword    rw(lastBlock[31:0], rotTemp);
-  subword    sw(rotTemp, subTemp);
-  galoismult gm(rcon[31:24], rconFront);
+  rotate #(1, 1, 8) rw(lastBlock[31:0], rotTemp);
+  subword           sw(rotTemp, subTemp);
+  galoismult        gm(rcon[31:24], rconFront);
 
   // 4 steps at a time
   always_comb begin
