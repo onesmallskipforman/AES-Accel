@@ -59,25 +59,3 @@ module mixcolumn(input  logic [31:0] a,
   assign y3 = a3 ^ tmp ^ t3;
   assign y = {y0, y1, y2, y3};
 endmodule
-
-/*
-  Below is a module for performing multiplication by x in
-  GF(2^8). This is achieved by a left shift ollowed by an XOR
-  if the result overflows. Uses irreducible polynomial
-  x^8+x^4+x^3+x+1 = 00011011.
-
-  Inputs:
-    a[31:0]:  state matrix column
-
-  Outputs:
-    y[127:0]: transformed column
-*/
-
-module galoismult(input  logic [7:0] a,
-                  output logic [7:0] y);
-
-  logic [7:0] ashift;
-
-  assign ashift = {a[6:0], 1'b0};
-  assign y = a[7] ? (ashift ^ 8'b00011011) : ashift;
-endmodule

@@ -22,8 +22,8 @@
     nextStm[127:0]: AES four-word state matrix
     stm[127:0]:     state matrix from last cycle (last clock tick)
     bStm[127:0]:    subBytes transform applied to stm
-    hStm[127:0]:    mixColumns transform applied to bStm
-    mStm[127:0]:    addRoundKey transform applied to hStm
+    hStm[127:0]:    shiftrows transform applied to bStm
+    mStm[127:0]:    mixColumns transform applied to hStm
 */
 
 module cipher (input  logic         clk,
