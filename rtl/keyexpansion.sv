@@ -73,7 +73,7 @@ module keyexpansion #(parameter K = 128)
       default:               nextstate = S0;
     endcase
 
-  rotate #(1, 1, 8) rw(lastBlock[31:0], rotTemp);
+  rotate #(1, 4, 8) rw(lastBlock[31:0], rotTemp);
   subword           sw(rotTemp, subTemp);
   galoismult        gm(rcon[31:24], rconFront);
 
