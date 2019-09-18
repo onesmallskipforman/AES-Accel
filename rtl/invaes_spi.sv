@@ -28,12 +28,12 @@
     cyphertextcaptured[127:0]: encrypted message bits shifted out to miso
 */
 
-module aes_spi(input  logic         sclk,
-               input  logic         mosi,
-               input  logic         done,
-               input  logic [127:0] cyphertext,
-               output logic         miso,
-               output logic [127:0] key, plaintext);
+module invaes_spi(input  logic         sclk,
+                  input  logic         mosi,
+                  input  logic         done,
+                  input  logic [127:0] cyphertext,
+                  output logic         miso,
+                  output logic [127:0] key, plaintext);
 
   logic         miso_delayed, wasdone;
   logic [127:0] cyphertextcaptured;

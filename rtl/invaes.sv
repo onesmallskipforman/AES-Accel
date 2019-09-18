@@ -26,16 +26,16 @@
     cyphertext[127:0]: encrypted 128-bit message
 */
 
-module aes(input  logic clk, reset,
-           input  logic r_sclk,
-           input  logic r_mosi,
-           input  logic r_ce,
-           output logic r_miso,
-           output logic done);
+module invaes(input  logic clk, reset,
+              input  logic r_sclk,
+              input  logic r_mosi,
+              input  logic r_ce,
+              output logic r_miso,
+              output logic done);
 
   logic [127:0] key, plaintext, cyphertext;
 
-  aes_spi  spi(r_sclk, r_mosi, done, cyphertext, r_miso, key, plaintext);
-  aes_core core(clk, reset, r_ce, key, plaintext, done, cyphertext);
+  invaes_spi  spi(r_sclk, r_mosi, done, cyphertext, r_miso, key, plaintext);
+  invaes_core core(clk, reset, r_ce, key, plaintext, done, cyphertext);
 
 endmodule

@@ -39,12 +39,12 @@
     predone:            bit signalling the invkey has been produced
 */
 
-module aes_core(input  logic         clk, reset,
-                input  logic         ce,
-                input  logic [127:0] key,
-                input  logic [127:0] cyphertext,
-                output logic         done,
-                output logic [127:0] plaintext);
+module invaes_core(input  logic         clk, reset,
+                   input  logic         ce,
+                   input  logic [127:0] key,
+                   input  logic [127:0] cyphertext,
+                   output logic         done,
+                   output logic [127:0] plaintext);
 
   logic [127:0] iwBlock, invkey;
   logic [3:0]   countval1, countval2;
@@ -54,14 +54,13 @@ module aes_core(input  logic         clk, reset,
   // generate 5 MHz clock for cycles
   clk_gen #(5 * (10**6)) sck(clk, reset, 1'b1, slwclk);
 
-  // key expanison process
-  counter #(4)  cnt(slwclk, ce, !predone, 1'b1, countval1);
-  keyexpansion  ke0(slwclk, ce, predone, key, invkey);
+  // counters for forward and reverse expansion
+  counter #(4)  ct0(slwclk, ce, !predone, 1'b1, countval1);
+  counter #(4)  ct1(slwclk, ce & predone, !done, 1'b1, countval2);
 
   // send key a 4-word key schedule to cipher each cycle
-  counter #(4)     cnt(slwclk, ce & predone, !done, 1'b1, countval2);
-  invkeyexpansion  ke0(slwclk, ce & predone, done, invkey, iwBlock);
-  cipher           ci0(slwclk, ce & predone, done, iwBlock, cyphertext, plaintext);
+  expand        ex0(slwclk, ce, predone, key, invkey);
+  invcipher     ci0(slwclk, ce & predone, done, iwBlock, cyphertext, plaintext);
 
   // the first cycle is the slwclk cycle after ce is deasserted,
   // meaning countvals only have to count to 10

@@ -31,14 +31,14 @@ module invgaloismult #(parameter N = 1)
   logic [8*(N+1)-1:0] powers, ashift;
 
   generate
-    assign powers[0 :+ 8] = a;
+    assign powers[0 +: 8] = a;
     for (i = 1; i < N; i++) begin : galois
-      assign ashift[i*8 :+ 8] = (powers[(i-1)*8 :+ 8] << 1);
-      assign powers[i*8 :+ 8] = ({powers[(i-1)*8 :+ 8]}[7])?
-        (ashift[i*8 :+ 8] ^ 8'b10001101) : ashift[i*8 :+ 8];
+      assign ashift[i*8 +: 8] = (powers[(i-1)*8 +: 8] << 1);
+      assign powers[i*8 +: 8] = (powers[i*8-1])? 
+		(ashift[i*8 :+ 8] ^ 8'b10001101) : ashift[i*8 +: 8];
     end
 
   endgenerate
 
-  assign y = powers[(i-1)*8 :+ 8];
+  assign y = powers[(N-1)*8 +: 8];
 endmodule
