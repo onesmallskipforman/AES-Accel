@@ -6,8 +6,8 @@
 
   Below is the top level module for an AES hardware accelerator. This module
   is designed to recieve key and plaintext from a rasberry pi over SPI
-  communication, and then perform AES encryption. Currently only 128-bit
-  AES Encryption is supported.
+  communication, and then perform AES encryption. Currently only 128-bit and
+  256-bit AES Encryption is supported.
 
   Inputs:
     clk:    sytem clock signal
@@ -21,9 +21,10 @@
     done:   done bit signalling encryption completed
 
   Internal Variables:
-    key[127:0]:        128-bit encryption key
-    plaintext[127:0]:  unecrpyted 128-bit message
-    cyphertext[127:0]: encrypted 128-bit message
+    K:                 the length of the key
+    key[K-1:0]:        K-bit encryption key
+    plaintext[K-1:0]:  unecrpyted K-bit message
+    cyphertext[K-1:0]: encrypted K-bit message
 */
 
 module aes(input  logic clk, reset,
@@ -33,9 +34,11 @@ module aes(input  logic clk, reset,
            output logic r_miso,
            output logic done);
 
-  logic [127:0] key, plaintext, cyphertext;
+  parameter K = 128;
 
-  aes_spi  spi(r_sclk, r_mosi, done, cyphertext, r_miso, key, plaintext);
-  aes_core core(clk, reset, r_ce, key, plaintext, done, cyphertext);
+  logic [K-1:0] key, plaintext, cyphertext;
+
+  aes_spi  #(K) spi(r_sclk, r_mosi, done, cyphertext, r_miso, key, plaintext);
+  aes_core #(K)  core(clk, reset, r_ce, key, plaintext, done, cyphertext);
 
 endmodule

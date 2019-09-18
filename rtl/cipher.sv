@@ -5,8 +5,9 @@
   AES cipher module
 
   Below is a module that performs the cipher function for 128-bit AES
-  encryption. This module runs 4 steps of the 44-step algorithm at a time,
-  allowing for the encryption to complete in 11 cycles.
+  encryption. This module runs 4 steps of the algorithm at a time,
+  allowing 128-, 192-, and 128-bit encyption encryption to complete
+  11 cycles, 13 cycles, and 15 cycles, respectively.
 
   Inputs:
     clk:               sytem clock signal

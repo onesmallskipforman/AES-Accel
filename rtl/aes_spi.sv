@@ -11,6 +11,9 @@
   message with ticks of sclk. Tricky cases are handled for when encryption is over
   and spi communication resumes (spi after done is first asserted).
 
+  Parameters:
+    K:                        the length of the key
+
   Inputs:
     sclk:                     spi master clock signal
     mosi:                     input from spi master
@@ -19,7 +22,7 @@
 
   Outputs:
     miso:                     output to spi master
-    key[127:0]:               128-bit encryption key
+    key[K-1:0]:               K-bit encryption key
     plaintext[127:0]:         unecrpyted 128-bit message
 
   Internal Vars:
@@ -28,12 +31,14 @@
     cyphertextcaptured[127:0]: encrypted message bits shifted out to miso
 */
 
-module aes_spi(input  logic         sclk,
-               input  logic         mosi,
-               input  logic         done,
-               input  logic [127:0] cyphertext,
-               output logic         miso,
-               output logic [127:0] key, plaintext);
+module aes_spi #(parameter K = 128)
+                (input  logic         sclk,
+                 input  logic         mosi,
+                 input  logic         done,
+                 input  logic [127:0] cyphertext,
+                 output logic         miso,
+                 output logic [K-1:0] key,
+                 output logic [127:0] plaintext);
 
   logic         miso_delayed, wasdone;
   logic [127:0] cyphertextcaptured;
