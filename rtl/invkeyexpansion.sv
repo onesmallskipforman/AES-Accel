@@ -21,7 +21,7 @@
   Internal Variables:
     rcon[31:0]:        round constant word array for the first step of the current cycle
     rotTemp[31:0]:     rotWord transform applied to last cylce's wBlock
-    subTemp[31:0]:     subWord transform applied to rotWord
+    subTemp[31:0]:     subWord transform applied to rotTemp
     rconTemp[31:0]:    XOR between subWord and rcon
     lastiBlock[127:0]: last word from the expansion block from the last cycle
     temp[127:0]:       temporary storage for iwBlock for cycles 2-10
