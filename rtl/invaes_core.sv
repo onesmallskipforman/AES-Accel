@@ -31,12 +31,11 @@
     cyphertext[127:0]: encrypted 128-bit message
 
   Internal Variables:
-    iwBlock[127:0]:     block of Nk=4 words generated in a cycle of inverse key expansion
-    invkey[127:0]:      inverse key, which is the last round key value from key expansion
-    countval1[3:0]:     current key expansion (invkey generation) cycle
-    countval2[3:0]:     current cycle of inverse encryption
+    wBlock[127:0]:     block of Nk=4 words generated in a cycle of key expansion
+    countval1[3:0]:     current forward key expansion cycle
+    countval2[3:0]:     current cycle of inverse expansion and encryption
     slwclk:             4 MHz slower clock signal driving the cycle
-    predone:            bit signalling the invkey has been produced
+    predone:            bit signalling forward key expansion is complete
 */
 
 module invaes_core(input  logic         clk, reset,
@@ -46,7 +45,7 @@ module invaes_core(input  logic         clk, reset,
                    output logic         done,
                    output logic [127:0] plaintext);
 
-  logic [127:0] iwBlock, invkey;
+  logic [127:0] wBlock;
   logic [3:0]   countval1, countval2;
   logic         slwclk;
   logic         predone;
@@ -56,11 +55,11 @@ module invaes_core(input  logic         clk, reset,
 
   // counters for forward and reverse expansion
   counter #(4)  ct0(slwclk, ce, !predone, 1'b1, countval1);
-  counter #(4)  ct1(slwclk, ce & predone, !done, 1'b1, countval2);
+  counter #(4)  ct1(slwclk, ce | !predone, !done, 1'b1, countval2);
 
   // send key a 4-word key schedule to cipher each cycle
-  expand        ex0(slwclk, ce, predone, key, invkey);
-  invcipher     ci0(slwclk, ce & predone, done, iwBlock, cyphertext, plaintext);
+  expand        ex0(slwclk, ce, predone, key, wBlock);
+  invcipher     ci0(slwclk, ce | !predone, done, wBlock, cyphertext, plaintext);
 
   // the first cycle is the slwclk cycle after ce is deasserted,
   // meaning countvals only have to count to 10

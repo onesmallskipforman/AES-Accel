@@ -64,7 +64,7 @@ module invsbox(input  logic [7:0] a,
   // sbox implemented as a ROM
   logic [7:0] sbox[0:255];
 
-  initial $readmemh("invsbox.txt", sbox);
+  initial $readmemh("../InvAES-Accel/rtl/invsbox.txt", sbox);
   assign y = sbox[a];
 
 endmodule

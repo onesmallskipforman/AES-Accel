@@ -10,7 +10,7 @@ module testbench();
   logic [8:0] i;
 
   // device under test
-  aes dut(clk, reset, sck, sdi, load, sdo, done);
+  invaes dut(clk, reset, sck, sdi, load, sdo, done);
 
   // test case
   initial begin
