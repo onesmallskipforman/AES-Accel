@@ -36,7 +36,6 @@
     roundKey[127:0]:   block of Nk=4 words generated in a cycle of key expansion
     countval[3:0]:     current cycle
     slwclk:            4 MHz slower clock signal driving the cycle
-    rounds:            number of rounds for AES encryption (determined by K)
 */
 
 module aes_core #(parameter K = 128)
@@ -50,7 +49,6 @@ module aes_core #(parameter K = 128)
   logic [127:0] roundKey;
   logic [3:0]   countval;
   logic         slwclk;
-  parameter logic [3:0] rounds;
 
   // generate 5 MHz clock for cycles
   clk_gen #(5 * (10**6)) sck(clk, reset, 1'b1, slwclk);
@@ -60,13 +58,11 @@ module aes_core #(parameter K = 128)
   keyexpansion #(K) ke0(slwclk, ce, done, key, roundKey);
   cipher            ci0(slwclk, ce, done, roundKey, plaintext, cyphertext);
 
+  // the first cycle is the slwclk cycle after ce is deasserted
   generate
-    if (K = 128) begin assign rounds = 4'b1010; end
-    if (K = 192) begin assign rounds = 4'b1100; end
-    if (K = 256) begin assign rounds = 4'b1110; end
+    if (K == 128) begin assign done = (countval == 4'b1010); end
+    if (K == 192) begin assign done = (countval == 4'b1100); end
+    if (K == 256) begin assign done = (countval == 4'b1110); end
   endgenerate
-
-  // the first cycle is the slwclk cycle after ce is deasserted,
-  assign done = (countval == rounds);
 
 endmodule

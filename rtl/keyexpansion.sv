@@ -44,7 +44,7 @@ module keyexpansion #(parameter K = 128)
   logic [K-1:0] lastBlock, temp, wBlock;
   logic [7:0]   rconFront;
 
-  typedef enum logic [1:0] {S0, S1, S2, S3} statetype;
+  typedef enum logic [2:0] {S0, S1, S2, S3, S4, S5} statetype;
   statetype state, nextstate;
 
   always_ff @(posedge clk)
@@ -68,7 +68,7 @@ module keyexpansion #(parameter K = 128)
           else               nextstate = S5;
       S2:                    nextstate = S1;
       S3:                    nextstate = S1;
-      S4:                    nextstate = S1;
+      S4:                    nextstate = S2;
       S5:                    nextstate = S2;
       default:               nextstate = S0;
     endcase
@@ -86,7 +86,7 @@ module keyexpansion #(parameter K = 128)
       if ( (K == 256) && (i == 128) ) begin
         subword so(temp[i+32-1:i], subOrgTemp);
         assign temp[i-1:i-32]  = lastBlock[i-1:i-32]  ^ subOrgTemp;
-      end else
+      end else begin
         assign temp[i-1:i-32]  = lastBlock[i-1:i-32]  ^ temp[i+32-1:i];
       end
     end
@@ -96,18 +96,18 @@ module keyexpansion #(parameter K = 128)
     case(state)
       S0:      roundKey = key[K-1: K-128];
       S1:      roundKey = temp[K-1: K-128];
-      S2:      roundKey = temp[127:0];
+      S2:      roundKey = lastBlock[127:0];
       S3:      roundKey = key[127:0];
-      S4:      roundKey = {key[63:0], temp[191:128]}; // TODO: reduce S4+S5 when you make synchronous
-      S5:      roundKey = {lastBlock[63:0], temp[191:128]};
+      S4:      roundKey = {key[63:0], temp[K-1: K-64]}; // TODO: reduce S4+S5 when you make synchronous
+      S5:      roundKey = {lastBlock[63:0], temp[K-1: K-64]};
       default: roundKey = temp[K-1: K-128];
     endcase
 
   always_comb
     if      (state == S0) wBlock = key;
-    else if (state == S1) wBlock = temp;
+    else if ((state == S1) | (state == S4) | (state == S5)) wBlock = temp;
     else                  wBlock = lastBlock;
 
-  assign nextrcon = (state != S1)? rcon:{rconFront, 24'b0};
+  assign nextrcon = ((state != S1) & (state != S4) & (state != S5))? rcon:{rconFront, 24'b0};
 
 endmodule

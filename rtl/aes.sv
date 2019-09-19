@@ -9,6 +9,9 @@
   communication, and then perform AES encryption. Currently only 128-bit and
   256-bit AES Encryption is supported.
 
+  Parameters:
+    K:      the length of the key
+
   Inputs:
     clk:    sytem clock signal
     reset:  reset signal
@@ -21,22 +24,21 @@
     done:   done bit signalling encryption completed
 
   Internal Variables:
-    K:                 the length of the key
     key[K-1:0]:        K-bit encryption key
     plaintext[K-1:0]:  unecrpyted K-bit message
     cyphertext[K-1:0]: encrypted K-bit message
 */
 
-module aes(input  logic clk, reset,
-           input  logic r_sclk,
-           input  logic r_mosi,
-           input  logic r_ce,
-           output logic r_miso,
-           output logic done);
+module aes #(parameter K = 128)
+            (input  logic clk, reset,
+             input  logic r_sclk,
+             input  logic r_mosi,
+             input  logic r_ce,
+             output logic r_miso,
+             output logic done);
 
-  parameter K = 128;
-
-  logic [K-1:0] key, plaintext, cyphertext;
+  logic [K-1:0] key;
+  logic [127:0] plaintext, cyphertext;
 
   aes_spi  #(K) spi(r_sclk, r_mosi, done, cyphertext, r_miso, key, plaintext);
   aes_core #(K)  core(clk, reset, r_ce, key, plaintext, done, cyphertext);
