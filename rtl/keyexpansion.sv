@@ -15,7 +15,7 @@
   Inputs:
     clk:              sytem clock signal
     reset:            reset signal to restart cypher process
-    done:             done bit signalling encryption completed
+    done:             done/disable bit signalling encryption completed
     key[K-1:0]:       K-bit encryption key
 
   Outputs:
@@ -44,7 +44,7 @@ module keyexpansion #(parameter K = 128)
   logic [K-1:0] lastBlock, temp, wBlock;
   logic [7:0]   rconFront;
 
-  typedef enum logic [2:0] {S0, S1, S2, S3, S4, S5} statetype;
+  typedef enum logic [1:0] {S0, S1, S2, S3} statetype;
   statetype state, nextstate;
 
   always_ff @(posedge clk)
@@ -52,30 +52,29 @@ module keyexpansion #(parameter K = 128)
       state       <= S0;
       lastBlock   <= 32'b0;
       rcon        <= 32'h01000000;
-    end else begin
+    end else if (!done) begin
       state       <= nextstate;
       lastBlock   <= wBlock;
       rcon        <= nextrcon;
     end
 
+  // next state logic
   always_comb
     case(state)
       S0: if      (K == 128) nextstate = S1;
-          else if (K == 256) nextstate = S3;
-          else               nextstate = S4;
+          else if (K == 256) nextstate = S2;
+          else               nextstate = S3;
       S1: if      (K == 128) nextstate = S1;
           else if (K == 256) nextstate = S2;
-          else               nextstate = S5;
+          else               nextstate = S3;
       S2:                    nextstate = S1;
-      S3:                    nextstate = S1;
-      S4:                    nextstate = S2;
-      S5:                    nextstate = S2;
+      S3:                    nextstate = S2;
       default:               nextstate = S0;
     endcase
 
+  // temp block logic
   rotate #(1, 4, 8) rw(lastBlock[31:0], rotTemp);
   subword           sw(rotTemp, subTemp);
-  galoismult        gm(rcon[31:24], rconFront);
 
   assign rconTemp       = subTemp             ^ rcon;
   assign temp[K-1:K-32] = lastBlock[K-1:K-32] ^ rconTemp;
@@ -92,22 +91,25 @@ module keyexpansion #(parameter K = 128)
     end
   endgenerate
 
+  // next expansion block logic
+  always_comb
+    if      (state == S0)                   wBlock = key;
+    else if ((state == S1) | (state == S3)) wBlock = temp;
+    else                                    wBlock = lastBlock;
+
+  // next round constant logic
+  galoismult gm(rcon[31:24], rconFront);
+  assign nextrcon = ((state != S1) & (state != S3))? rcon:{rconFront, 24'b0};
+
+  // output logic
   always_comb
     case(state)
-      S0:      roundKey = key[K-1: K-128];
-      S1:      roundKey = temp[K-1: K-128];
-      S2:      roundKey = lastBlock[127:0];
-      S3:      roundKey = key[127:0];
-      S4:      roundKey = {key[63:0], temp[K-1: K-64]}; // TODO: reduce S4+S5 when you make synchronous
-      S5:      roundKey = {lastBlock[63:0], temp[K-1: K-64]};
+      S0:      roundKey = key[K-1: K-128];   // first four words of key
+      S1:      roundKey = temp[K-1: K-128];  // first four words of temp XOR'ed with last expansion block
+      S2:      roundKey = lastBlock[127:0];  // last four words of last key block
+      S3:      roundKey = {lastBlock[63:0],
+                           temp[K-1: K-64]}; // last two words of last expansion block, first two of current block
       default: roundKey = temp[K-1: K-128];
     endcase
-
-  always_comb
-    if      (state == S0) wBlock = key;
-    else if ((state == S1) | (state == S4) | (state == S5)) wBlock = temp;
-    else                  wBlock = lastBlock;
-
-  assign nextrcon = ((state != S1) & (state != S4) & (state != S5))? rcon:{rconFront, 24'b0};
 
 endmodule

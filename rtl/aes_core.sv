@@ -4,7 +4,7 @@
   12/10/2019
   AES encryption module
 
-  Below is a module that performs 128-bit AES encryption. Wheh load is asserted
+  Below is a module that performs AES encryption. Wheh load is asserted
   and then deasserted, the module takes the current 128-, 192-, or 128-bit key
   and 128-bit plaintext to generate cyphertext over 11 cycles, 13 cycles, and 15 cycles,
   respectively. After the cycles are complete, the module asserts done.
@@ -58,11 +58,10 @@ module aes_core #(parameter K = 128)
   keyexpansion #(K) ke0(slwclk, ce, done, key, roundKey);
   cipher            ci0(slwclk, ce, done, roundKey, plaintext, cyphertext);
 
-  // the first cycle is the slwclk cycle after ce is deasserted
   generate
-    if (K == 128) begin assign done = (countval == 4'b1010); end
-    if (K == 192) begin assign done = (countval == 4'b1100); end
-    if (K == 256) begin assign done = (countval == 4'b1110); end
+    if (K == 128) begin assign done = (countval == 4'b1011); end
+    if (K == 192) begin assign done = (countval == 4'b1101); end
+    if (K == 256) begin assign done = (countval == 4'b1111); end
   endgenerate
 
 endmodule

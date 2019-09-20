@@ -12,8 +12,8 @@
   Inputs:
     clk:               sytem clock signal
     reset:             reset signal to restart cypher process
-    done:              done bit signalling encryption completed
-    wBlock[127:0]:     block of Nk=4 words generated in a cycle of key expansion
+    done:             done/disable bit signalling encryption completed
+    roundKey[127:0]:   block of Nk=4 words generated in a cycle of key expansion
     in[127:0]:         128-bit message to encrypt
 
   Outputs:
@@ -30,7 +30,7 @@
 module cipher (input  logic         clk,
                input  logic         reset,
                input  logic         done,
-               input  logic [127:0] wBlock,
+               input  logic [127:0] roundKey,
                input  logic [127:0] in,
                output logic [127:0] out);
 
@@ -43,33 +43,34 @@ module cipher (input  logic         clk,
     if (reset) begin
       state <= S0;
       stm   <= 0;
-    end else begin
+    end else if (!done) begin
       state <= nextstate;
       stm   <= nextStm;
     end
 
+  // next state logic
   always_comb
     case(state)
-      S0: if (reset) nextstate = S0;
-          else       nextstate = S1;
+      S0:            nextstate = S1;
       S1: if (done)  nextstate = S2;
           else       nextstate = S1;
-      S2: if (reset) nextstate = S0;
-          else       nextstate = S2;
+      S2:            nextstate = S2;
       default:       nextstate = S0;
     endcase
 
+  // cipher state transformation logic
   subbytes    sb1(stm, bStm);
   shiftrows   sr1(bStm, hStm);
   mixcolumns  mx1(hStm, mStm);
 
+  // next cipher state logic
   always_comb
-    if      ((state == S0) & (nextstate == S1))   nextStm = in^wBlock;   // cycle 1
-    else if ((state == S1) & (nextstate == S1))   nextStm = mStm^wBlock; // cycles 2-10
-    else if ((state == S1) & (nextstate == S2))   nextStm = hStm^wBlock; // cycle 11
-    else                                          nextStm = stm;         // resting
+    if       (state == S0)                        nextStm = in   ^ roundKey; // cycle 1
+    else if ((state == S1) & (nextstate == S1))   nextStm = mStm ^ roundKey; // cycles 2-10
+    else if ((state == S1) & done)                nextStm = hStm ^ roundKey; // cycle 11
+    else                                          nextStm = stm;             // resting
 
-  // assign nextStm = ( !done & (state == S1) )? mStm^wBlock:stm;
-  assign out = nextStm;
+  // output logic
+  assign out = stm;
 
 endmodule

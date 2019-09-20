@@ -6,8 +6,8 @@
 
   Below is the top level module for an AES hardware accelerator. This module
   is designed to recieve key and plaintext from a rasberry pi over SPI
-  communication, and then perform AES encryption. Currently only 128-bit and
-  256-bit AES Encryption is supported.
+  communication, and then perform AES encryption. 128-, 192-, and 256-bit AES
+  Encryptions are supported.
 
   Parameters:
     K:      the length of the key
@@ -37,10 +37,18 @@ module aes #(parameter K = 128)
              output logic r_miso,
              output logic done);
 
+  // generate block to filter invalid key sizes
+  generate
+    if ( (K != 128) | (K != 192) | (K != 256) ) begin
+        $error("%m ** Illegal Condition ** Key size: %d Invalid for AES Encryption. 
+          Valid Key sizes: 128, 192, and 256", K);
+    end
+  endgenerate
+
   logic [K-1:0] key;
   logic [127:0] plaintext, cyphertext;
 
   aes_spi  #(K) spi(r_sclk, r_mosi, done, cyphertext, r_miso, key, plaintext);
-  aes_core #(K)  core(clk, reset, r_ce, key, plaintext, done, cyphertext);
+  aes_core #(K) core(clk, reset, r_ce, key, plaintext, done, cyphertext);
 
 endmodule

@@ -29,12 +29,12 @@ module testbench();
     // plaintext <= 128'h00112233445566778899AABBCCDDEEFF;
     // expected  <= 128'h69C4E0D86A7B0430D8CDB78070B4C55A;
 
-    // Alternate test case from Appendix C.2
+    // 192-bit test case from Appendix C.2
      expected       <= 128'hdda97ca4864cdfe06eaf70a0ec0d7191;
      plaintext <= 128'h00112233445566778899aabbccddeeff;
      key  <= 192'h000102030405060708090a0b0c0d0e0f1011121314151617;
 
-    // Alternate test case from Appendix C.3
+    // 256-bit test case from Appendix C.3
     // expected       <= 128'h8ea2b7ca516745bfeafc49904b496089;
     // plaintext <= 128'h00112233445566778899aabbccddeeff;
     // key  <= 256'h000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f;
