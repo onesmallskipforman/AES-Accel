@@ -1,6 +1,6 @@
 # InvAES-Accel
 
-Inverse-AES is SystemVerilog hardware accelerator code to perform AES Decryption algorithm. Currently only supports 128-bit decryption.
+Inverse-AES is SystemVerilog hardware accelerator code to perform AES Decryption algorithm. Supports 128-, 192-, and 256- bit encryption. For further detail about the algorithm, please see `doc/`.
 
 ## Purpose
 
@@ -10,7 +10,11 @@ AES decryption is a lengthy process for a single core. To relieve a CPU of this 
 
 I am currently working on extending the SystemVerilog to perform AES-192 and AES-256 decryption.
 
-## A Note about reading textfiles
+## Test and Simulation
+
+Several tests were in simulation, using `sim/testbench.sv` in modelsim, as well as in real-time, using `test/testcoms.c` from a rasberry pi.
+
+### A Note about reading textfiles
 
 Part of this project involves reading a textfile at compile time using the `$readmemh` call. Depending on where you place project files for synthesis and simulation, you may have to change the listed path of that textfile in that call.
 

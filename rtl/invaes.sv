@@ -5,9 +5,12 @@
   top-level module containing SPI coms and AES core
 
   Below is the top level module for an AES hardware accelerator. This module
-  is designed to recieve key and plaintext from a rasberry pi over SPI
-  communication, and then perform AES encryption. Currently only 128-bit
-  AES Encryption is supported.
+  is designed to recieve key and cyphertext from a rasberry pi over SPI
+  communication, and then perform AES decryption. 128-, 192-, and 256-bit AES
+  Decryptions are supported.
+
+  Parameters:
+    K:      the length of the key
 
   Inputs:
     clk:    sytem clock signal
@@ -18,24 +21,34 @@
 
   Outputs:
     r_miso: pi miso
-    done:   done bit signalling encryption completed
+    done:   done bit signalling decryption completed
 
   Internal Variables:
-    key[127:0]:        128-bit encryption key
+    key[K-1:0]:        K-bit encryption key
     plaintext[127:0]:  unecrpyted 128-bit message
     cyphertext[127:0]: encrypted 128-bit message
 */
 
-module invaes(input  logic clk, reset,
-              input  logic r_sclk,
-              input  logic r_mosi,
-              input  logic r_ce,
-              output logic r_miso,
-              output logic done);
+module invaes #(parameter K = 128)
+               (input  logic clk, reset,
+                input  logic r_sclk,
+                input  logic r_mosi,
+                input  logic r_ce,
+                output logic r_miso,
+                output logic done);
 
-  logic [127:0] key, plaintext, cyphertext;
+  // generate block to filter invalid key sizes
+  generate
+    if ( (K != 128) | (K != 192) | (K != 256) ) begin
+        $error("%m ** Illegal Condition ** Key size: %d Invalid for AES Decryption.
+          Valid Key sizes: 128, 192, and 256", K);
+    end
+  endgenerate
 
-  invaes_spi  spi(r_sclk, r_mosi, done, cyphertext, r_miso, key, plaintext);
-  invaes_core core(clk, reset, r_ce, key, plaintext, done, cyphertext);
+  logic [K-1:0] key;
+  logic [127:0] plaintext, cyphertext;
+
+  invaes_spi  #(K) spi(r_sclk, r_mosi, done, plaintext, r_miso, key, cyphertext);
+  invaes_core #(K) core(clk, reset, r_ce, key, cyphertext, done, plaintext);
 
 endmodule

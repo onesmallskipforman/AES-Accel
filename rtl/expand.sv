@@ -46,58 +46,112 @@ module expand (input  logic          clk, reset,
   typedef enum logic [1:0] {S0, S1, S2} statetype;
   statetype state, nextstate;
 
+  typedef enum logic {FWD, BWD} dirstatetype;
+  statetype dirstate, nextdirstate;
+
   always_ff @(posedge clk)
     if (reset) begin
       state       <= S0;
+      dirstate    <= FWD;
       lastBlock   <= 32'b0;
       rcon        <= 32'h01000000;
     end else begin
       state       <= nextstate;
       lastBlock   <= wBlock;
       rcon        <= nextrcon;
+      dirstate    <= nextdirstate;
     end
 
+  // next state logic
   always_comb
-    case(state)
-      S0:                    nextstate = S1;
-      S1:      if (!predone) nextstate = S1;
-               else          nextstate = S2;
-      S2:                    nextstate = S2;
-      default:               nextstate = S0;
+    if (dirstate == FWD)
+      case(state)
+        S0: if      (K == 128) nextstate = S1;
+            else if (K == 256) nextstate = S2;
+            else               nextstate = S3;
+        S1: if      (K == 128) nextstate = S1;
+            else if (K == 256) nextstate = S2;
+            else               nextstate = S3;
+        S2:                    nextstate = S1;
+        S3:                    nextstate = S2;
+        default:               nextstate = S0;
+      endcase
+    else /* dirstate == BWD */
+      case(state)
+        S0: if      (K == 128) nextstate = S1;
+            else if (K == 256) nextstate = S2;
+            else               nextstate = S3;
+        S1: if      (K == 128) nextstate = S1;
+            else               nextstate = S2;
+        S2: if      (K == 256) nextstate = S1;
+            else               nextstate = S3;
+        S3:                    nextstate = S1;
+        default:               nextstate = S0;
+      endcase
+
+  // next expansion direction logic
+  always_comb
+    case(dirstate)
+      FWD: if (!predone) nextdirstate = FWD;
+           else          nextdirstate = BWD;
+      BWD:               nextdirstate = BWD;
+      default:           nextdirstate = FWD;
     endcase
 
+  // temp block decision logic
   always_comb
-    if (state == S2) transform = lastBlock[31:0] ^ lastBlock[63:32];
-    else             transform = lastBlock[31:0];
+    if (dirstate == BWD) transform = lastBlock[31:0] ^ lastBlock[63:32];
+    else begin           transform = lastBlock[31:0];
 
+  // temp block logic
   rotate #(1, 4, 8) rw(transform, rotTemp);
   subword           sw(rotTemp, subTemp);
+
+  assign rconTemp     = subTemp           ^ rcon;
+  assign temp[127:96] = lastBlock[127:96] ^ rconTemp;
+
+  genvar i;
+  generate
+    for (i = K-32; i > 0; i=i-32) begin: tempAssign
+      // unique case for 256-bit expansion block
+      if ( (K == 256) && (i == 128) ) begin
+        always_comb
+          if (dirstate == FWD)       subTransform  = temp[i+32-1:i];
+          else /* dirstate == BWD */ subTransform  = lastBlock[i+32-1:i];
+        subword so(subTransform, subOrgTemp);
+        assign temp[i-1:i-32]  = lastBlock[i-1:i-32]  ^ subOrgTemp;
+      end else begin
+        always_comb
+          if (dirstate == FWD)       temp[i-1:i-32]  = lastBlock[i-1:i-32]  ^ temp[i+32-1:i];
+          else /* dirstate == BWD */ temp[i-1:i-32]  = lastBlock[i-1:i-32]  ^ lastBlock[i+32-1:i];
+      end
+    end
+  endgenerate
+
+  // next round constant logic
   galoismult        gm(rcon[31:24], rconFront);
   invgaloismult     ig(rcon[31:24], invrconFront);
 
   always_comb begin
-    rconTemp     = subTemp           ^ rcon;
-    temp[127:96] = lastBlock[127:96] ^ rconTemp;
-    if (state == S1) begin
-      temp[95:64]  = lastBlock[95:64]  ^ temp[127:96];
-      temp[63:32]  = lastBlock[63:32]  ^ temp[95:64];
-      temp[31:0]   = lastBlock[31:0]   ^ temp[63:32];
-    end else if (state == S2) begin
-      temp[95:64]  = lastBlock[95:64]  ^ lastBlock[127:96];
-      temp[63:32]  = lastBlock[63:32]  ^ lastBlock[95:64];
-      temp[31:0]   = lastBlock[31:0]   ^ lastBlock[63:32];
-    end else begin
-      temp[95:0] = 96'b0;
-    end
+    if       (dirstate == BWD)                       nextrcon = {invrconFront, 24'b0};
+    else if ((dirstate == FWD) & (nextstate != BWD)) nextrcon = {rconFront, 24'b0};
+    else                                             nextrcon = rcon;
 
-    if (state == S2) 
-      nextrcon = {invrconFront, 24'b0};
-    else if ((state == S1) & (nextstate != S2))                     
-      nextrcon = {rconFront, 24'b0};
-    else                                       
-      nextrcon = rcon;
-  end
+  // next expansion block logic
+  always_comb
+    if      (state == S0)                   wBlock = key;
+    else if ((state == S1) | (state == S3)) wBlock = temp;
+    else                                    wBlock = lastBlock;
 
-  assign wBlock   = (state == S0)? key:temp;
+  // output logic
+  always_comb
+    case(state)
+      S0:      roundKey = key[K-1: K-128];   // first four words of key
+      S1:      roundKey = temp[K-1: K-128];  // first four words of temp XOR'ed with last expansion block
+      S2:      roundKey = lastBlock[127:0];  // last four words of last key block
+      S3:      roundKey = {lastBlock[63:0],
+                           temp[K-1: K-64]}; // last two words of last expansion block, first two of current block
+      default: roundKey = temp[K-1: K-128];
+    endcase
 
 endmodule
