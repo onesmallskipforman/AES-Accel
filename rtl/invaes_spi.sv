@@ -38,7 +38,7 @@ module invaes_spi #(parameter K = 128)
                    input  logic [127:0] plaintext,
                    output logic         miso,
                    output logic [K-1:0] key,
-                   input  logic [127:0] cyphertext);
+                   output logic [127:0] cyphertext);
 
   logic         miso_delayed, wasdone;
   logic [127:0] plaintextcaptured;

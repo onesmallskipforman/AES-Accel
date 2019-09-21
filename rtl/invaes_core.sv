@@ -63,7 +63,7 @@ module invaes_core #(parameter K = 128)
   counter #(4)  ct1(slwclk, ce | !predone, !done, 1'b1, countval2);
 
   // send key a 4-word key schedule to cipher each cycle
-  expand  #(K)  ex0(slwclk, ce, predone, key, roundKey);
+  expand  #(K)  ex0(slwclk, ce, predone, done, key, roundKey);
   invcipher     ci0(slwclk, ce | !predone, done, roundKey, cyphertext, plaintext);
 
   generate
@@ -73,6 +73,6 @@ module invaes_core #(parameter K = 128)
   endgenerate
 
   assign predone = (countval1 == cycles);
-  assign done    = (countval2 == cycles);
+  assign done    = (countval2 == (cycles-1'b1));
 
 endmodule
