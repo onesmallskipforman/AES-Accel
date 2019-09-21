@@ -6,7 +6,7 @@
 module testbench();
 
   // number of key bits
-  parameter K = 192;
+  parameter K = 128;
 
   logic clk, reset, load, done, sck, sdi, sdo;
   logic [K-1:0] key;
@@ -19,25 +19,33 @@ module testbench();
 
   // test case
   initial begin
-    // Test case from FIPS-197 Appendix A.1, B
-    // key       <= 128'h2B7E151628AED2A6ABF7158809CF4F3C;
-    // plaintext <= 128'h3243F6A8885A308D313198A2E0370734;
-    // expected  <= 128'h3925841D02DC09FBDC118597196A0B32;
+    if (K == 128) begin
 
-    // Alternate test case from Appendix C.1
-    // key       <= 128'h000102030405060708090A0B0C0D0E0F;
-    // plaintext <= 128'h00112233445566778899AABBCCDDEEFF;
-    // expected  <= 128'h69C4E0D86A7B0430D8CDB78070B4C55A;
+      // Test case from FIPS-197 Appendix A.1, B
+      // key       <= 128'h2B7E151628AED2A6ABF7158809CF4F3C;
+      // plaintext <= 128'h3243F6A8885A308D313198A2E0370734;
+      // expected  <= 128'h3925841D02DC09FBDC118597196A0B32;
 
-    // 192-bit test case from Appendix C.2
-     expected       <= 128'hdda97ca4864cdfe06eaf70a0ec0d7191;
-     plaintext <= 128'h00112233445566778899aabbccddeeff;
-     key  <= 192'h000102030405060708090a0b0c0d0e0f1011121314151617;
+      // Alternate test case from Appendix C.1
+      key       <= 128'h000102030405060708090A0B0C0D0E0F;
+      plaintext <= 128'h00112233445566778899AABBCCDDEEFF;
+      expected  <= 128'h69C4E0D86A7B0430D8CDB78070B4C55A;
 
-    // 256-bit test case from Appendix C.3
-    // expected       <= 128'h8ea2b7ca516745bfeafc49904b496089;
-    // plaintext <= 128'h00112233445566778899aabbccddeeff;
-    // key  <= 256'h000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f;
+    end else if (K == 192) begin
+
+      // 192-bit test case from Appendix C.2
+      expected       <= 128'hdda97ca4864cdfe06eaf70a0ec0d7191;
+      plaintext <= 128'h00112233445566778899aabbccddeeff;
+      key  <= 192'h000102030405060708090a0b0c0d0e0f1011121314151617;
+
+    end else begin
+
+      // 256-bit test case from Appendix C.3
+      expected       <= 128'h8ea2b7ca516745bfeafc49904b496089;
+      plaintext <= 128'h00112233445566778899aabbccddeeff;
+      key  <= 256'h000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f;
+
+    end
   end
 
   // generate clock and load signals

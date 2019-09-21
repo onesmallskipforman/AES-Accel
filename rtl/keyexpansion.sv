@@ -44,12 +44,12 @@ module keyexpansion #(parameter K = 128)
   logic [K-1:0] lastBlock, temp, wBlock;
   logic [7:0]   rconFront;
 
-  typedef enum logic [1:0] {S0, S1, S2, S3} statetype;
+  typedef enum logic [2:0] {START, S0, S1, S2, S3} statetype;
   statetype state, nextstate;
 
   always_ff @(posedge clk)
     if (reset) begin
-      state       <= S0;
+      state       <= START;
       lastBlock   <= 32'b0;
       rcon        <= 32'h01000000;
     end else if (!done) begin
@@ -61,6 +61,7 @@ module keyexpansion #(parameter K = 128)
   // next state logic
   always_comb
     case(state)
+      START:                 nextstate = S0;
       S0: if      (K == 128) nextstate = S1;
           else if (K == 256) nextstate = S2;
           else               nextstate = S3;
@@ -104,6 +105,7 @@ module keyexpansion #(parameter K = 128)
   // output logic
   always_comb
     case(state)
+      START:   roundKey = 0;
       S0:      roundKey = key[K-1: K-128];   // first four words of key
       S1:      roundKey = temp[K-1: K-128];  // first four words of temp XOR'ed with last expansion block
       S2:      roundKey = lastBlock[127:0];  // last four words of last key block

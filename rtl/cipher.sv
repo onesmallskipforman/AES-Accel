@@ -36,12 +36,12 @@ module cipher (input  logic         clk,
 
   logic [127:0] nextStm, stm, bStm, hStm, mStm;
 
-  typedef enum logic [1:0] {S0, S1, S2} statetype;
+  typedef enum logic [1:0] {START, S0, S1, S2} statetype;
   statetype state, nextstate;
 
   always_ff @(posedge clk)
     if (reset) begin
-      state <= S0;
+      state <= START;
       stm   <= 0;
     end else if (!done) begin
       state <= nextstate;
@@ -51,6 +51,7 @@ module cipher (input  logic         clk,
   // next state logic
   always_comb
     case(state)
+      START:         nextstate = S0;
       S0:            nextstate = S1;
       S1: if (done)  nextstate = S2;
           else       nextstate = S1;
@@ -71,6 +72,6 @@ module cipher (input  logic         clk,
     else                                          nextStm = stm;             // resting
 
   // output logic
-  assign out = stm;
+  assign out = nextStm;
 
 endmodule

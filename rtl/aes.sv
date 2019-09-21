@@ -39,9 +39,9 @@ module aes #(parameter K = 128)
 
   // generate block to filter invalid key sizes
   generate
-    if ( (K != 128) | (K != 192) | (K != 256) ) begin
-        $error("%m ** Illegal Condition ** Key size: %d Invalid for AES Encryption. 
-          Valid Key sizes: 128, 192, and 256", K);
+    if ( (K != 128) & (K != 192) & (K != 256) ) begin
+      // $error("** Illegal Condition ** Key size: %d Invalid for AES Encryption. Valid Key sizes: 128, 192, and 256", K);
+      illegal_keylength_condition_triggered non_existing_module();
     end
   endgenerate
 
