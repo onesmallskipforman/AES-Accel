@@ -35,83 +35,86 @@
 */
 
 module keyexpansion #(parameter K = 128)
-                     (input  logic          clk, reset,
-                      input  logic          done,
-                      input  logic [K-1:0]  key,
-                      output logic [127:0]  roundKey);
+               (input  logic          clk, reset,
+                input  logic          done,
+                input  logic [K-1:0]  key,
+                output logic [127:0]  roundKey);
 
-  logic [31:0]  rcon, nextrcon, rotTemp, subTemp, rconTemp, subOrgTemp, finalTemp;
-  logic [K-1:0] lastBlock, temp, wBlock;
-  logic [7:0]   rconFront;
+  logic [31:0]  rcon, nextrcon, transform, rotTemp, subTemp, rconTemp, subTransform, subOrgTemp;
+  logic [K-1:0] block, temp, nextBlock;
+  logic [7:0]   rconFront, invrconFront;
 
-  typedef enum logic [2:0] {START, S0, S1, S2, S3} statetype;
+  typedef enum logic [1:0] {S0, S1, S2, S3} statetype;
   statetype state, nextstate;
+
+  typedef enum logic {FWD, BWD} dirstatetype;
+  dirstatetype dirstate, nextdirstate;
 
   always_ff @(posedge clk)
     if (reset) begin
-      state       <= START;
-      lastBlock   <= 32'b0;
-      rcon        <= 32'h01000000;
+      state       <= S0;
+      block       <= 32'b0;
+      rcon        <= 32'h8d000000;
     end else if (!done) begin
       state       <= nextstate;
-      lastBlock   <= wBlock;
+      block       <= nextBlock;
       rcon        <= nextrcon;
     end
 
   // next state logic
   always_comb
     case(state)
-      START:                 nextstate = S0;
-      S0: if      (K == 128) nextstate = S1;
-          else if (K == 256) nextstate = S2;
-          else               nextstate = S3;
-      S1: if      (K == 128) nextstate = S1;
-          else if (K == 256) nextstate = S2;
-          else               nextstate = S3;
-      S2:                    nextstate = S1;
-      S3:                    nextstate = S2;
-      default:               nextstate = S0;
+      S0:                     nextstate = S1;
+      S1: if      (K == 128)  nextstate = S1;
+          else if (K == 256)  nextstate = S2;
+          else                nextstate = S3;
+      S2:                     nextstate = S1;
+      S3:                     nextstate = S2;
+      default:                nextstate = S0;
     endcase
 
-  // temp block logic
-  rotate #(1, 4, 8) rw(lastBlock[31:0], rotTemp);
-  subword           sw(rotTemp, subTemp);
+  // next round constant (rcon for current temp transform) logic
+  galoismult    gm(rcon[31:24], rconFront);
 
-  assign rconTemp       = subTemp             ^ rcon;
-  assign temp[K-1:K-32] = lastBlock[K-1:K-32] ^ rconTemp;
+  always_comb
+    if ((state == S0) | ((state == S1) & (K != 128))) nextrcon = rcon;
+    else                                              nextrcon = {rconFront, 24'b0};
+
+  // temp block logic
+  assign transform = block[31:0];
+  rotate #(1, 4, 8) rw(transform, rotTemp);
+  subword           sw(rotTemp, subTemp);
+  assign rconTemp       = subTemp         ^ nextrcon;
+  assign temp[K-1:K-32] = block[K-1:K-32] ^ rconTemp;
 
   genvar i;
   generate
     for (i = K-32; i > 0; i=i-32) begin: tempAssign
+      // unique case for 256-bit expansion block
       if ( (K == 256) && (i == 128) ) begin
-        subword so(temp[i+32-1:i], subOrgTemp);
-        assign temp[i-1:i-32]  = lastBlock[i-1:i-32]  ^ subOrgTemp;
+        assign subTransform = temp[i+32-1:i];
+        subword so(subTransform, subOrgTemp);
+        assign temp[i-1:i-32]  = block[i-1:i-32]^subOrgTemp;
       end else begin
-        assign temp[i-1:i-32]  = lastBlock[i-1:i-32]  ^ temp[i+32-1:i];
+        assign temp[i-1:i-32] = block[i-1:i-32]^temp[i+32-1:i];
       end
     end
   endgenerate
 
   // next expansion block logic
   always_comb
-    if      (state == S0)                   wBlock = key;
-    else if ((state == S1) | (state == S3)) wBlock = temp;
-    else                                    wBlock = lastBlock;
-
-  // next round constant logic
-  galoismult gm(rcon[31:24], rconFront);
-  assign nextrcon = ((state != S1) & (state != S3))? rcon:{rconFront, 24'b0};
+    if       (state == S0)               nextBlock = key;
+    else if ((K != 128) & (state == S1)) nextBlock = block;
+    else                                 nextBlock = temp;
 
   // output logic
   always_comb
     case(state)
-      START:   roundKey = 0;
-      S0:      roundKey = key[K-1: K-128];   // first four words of key
-      S1:      roundKey = temp[K-1: K-128];  // first four words of temp XOR'ed with last expansion block
-      S2:      roundKey = lastBlock[127:0];  // last four words of last key block
-      S3:      roundKey = {lastBlock[63:0],
-                           temp[K-1: K-64]}; // last two words of last expansion block, first two of current block
-      default: roundKey = temp[K-1: K-128];
+      S0: roundKey = 32'b0;
+      S1: roundKey = block[K-1: K-128];
+      S2: roundKey = block[127:0];
+      S3: roundKey = {block[63:0], temp[K-1: K-64]};
+      default: roundKey = 32'b0;
     endcase
 
 endmodule
