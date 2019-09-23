@@ -39,32 +39,33 @@
     countval2[3:0]:      current cycle of inverse expansion and encryption
     cycles[3:0]:         number of cycles needed to complete decryption
     slwclk:              4 MHz slower clock signal driving the cycle
-    predone:             bit signalling forward key expansion is complete
+    done1:             bit signalling forward key expansion is complete
 */
 
 module invaes_core #(parameter K = 128)
-                    (input  logic         clk, reset,
+                    (input  logic        clk, reset,
                     input  logic         ce,
                     input  logic [K-1:0] key,
                     input  logic [127:0] cyphertext,
-                    output logic         done,
+                    output logic         done2,
                     output logic [127:0] plaintext);
 
   logic [127:0] roundKey;
   logic [3:0]   countval1, countval2, cycles;
   logic         slwclk;
-  logic         predone;
+  logic         done1;
+  logic         dir;
 
   // generate 5 MHz clock for cycles
   clk_gen #(5 * (10**6)) sck(clk, reset, 1'b1, slwclk);
 
   // counters for forward and reverse expansion
-  counter #(4)  ct0(slwclk, ce, !predone, 1'b1, countval1);
-  counter #(4)  ct1(slwclk, ce | !predone, !done, 1'b1, countval2);
+  counter #(4)  ct0(slwclk, ce, !done1, 1'b1, countval1);
+  counter #(4)  ct1(slwclk, ce | !done1, !done2, 1'b1, countval2);
 
   // send key a 4-word key schedule to cipher each cycle
-  expand  #(K)  ex0(slwclk, ce, predone, done, key, roundKey);
-  invcipher     ci0(slwclk, ce | !predone, done, roundKey, cyphertext, plaintext);
+  expand  #(K)  ex0(slwclk, ce, done1, done2, key, roundKey);
+  invcipher     ci0(slwclk, ce | !done1, done2, roundKey, cyphertext, plaintext);
 
   generate
     if (K == 128) begin assign cycles = 4'b1011; end
@@ -72,7 +73,9 @@ module invaes_core #(parameter K = 128)
     if (K == 256) begin assign cycles = 4'b1111; end
   endgenerate
 
-  assign predone = (countval1 == cycles);
-  assign done    = (countval2 == (cycles-1'b1));
+  assign dir = 1'b1; // 0 is fwd, 1 is bwd
+  assign done1 = (countval1 == cycles);
+  assign done2 = (dir)? (countval2 == (cycles-1'b1)) : done1;
+
 
 endmodule
