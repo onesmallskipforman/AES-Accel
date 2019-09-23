@@ -46,15 +46,15 @@ module invaes_core #(parameter K = 128)
                     (input  logic        clk, reset,
                     input  logic         ce,
                     input  logic [K-1:0] key,
-                    input  logic [127:0] cyphertext,
+                    input  logic [127:0] message,
+                    input logic dir, // 0 is fwd, 1 is bwd
                     output logic         done2,
-                    output logic [127:0] plaintext);
+                    output logic [127:0] translated);
 
-  logic [127:0] roundKey;
+  logic [127:0] roundKey, ciTranslated, invTranslated;
   logic [3:0]   countval1, countval2, cycles;
   logic         slwclk;
   logic         done1;
-  logic         dir;
 
   // generate 5 MHz clock for cycles
   clk_gen #(5 * (10**6)) sck(clk, reset, 1'b1, slwclk);
@@ -64,8 +64,11 @@ module invaes_core #(parameter K = 128)
   counter #(4)  ct1(slwclk, ce | !done1, !done2, 1'b1, countval2);
 
   // send key a 4-word key schedule to cipher each cycle
-  expand  #(K)  ex0(slwclk, ce, done1, done2, key, roundKey);
-  invcipher     ci0(slwclk, ce | !done1, done2, roundKey, cyphertext, plaintext);
+  expand  #(K) ex0(slwclk, ce, done1, done2, key, roundKey);
+  cipher       ci0(slwclk, ce, done2, roundKey, message, ciTranslated);
+  invcipher    in0(slwclk, ce | !done1, done2, roundKey, message, invTranslated);
+
+  assign translated = (dir)? invTranslated : ciTranslated;
 
   generate
     if (K == 128) begin assign cycles = 4'b1011; end
@@ -73,7 +76,6 @@ module invaes_core #(parameter K = 128)
     if (K == 256) begin assign cycles = 4'b1111; end
   endgenerate
 
-  assign dir = 1'b1; // 0 is fwd, 1 is bwd
   assign done1 = (countval1 == cycles);
   assign done2 = (dir)? (countval2 == (cycles-1'b1)) : done1;
 

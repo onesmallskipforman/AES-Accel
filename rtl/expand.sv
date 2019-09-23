@@ -44,7 +44,7 @@ module expand #(parameter K = 128)
   logic [31:0]  rcon, nextrcon, transform, rotTemp, subTemp, rconTemp, subTransform, subOrgTemp;
   logic [K-1:0] block, temp, nextBlock;
   logic [7:0]   rconFront, invrconFront;
-  logic         wasdone1;
+  logic         wasdone1, pivot;
 
   typedef enum logic [1:0] {S0, S1, S2, S3} statetype;
   statetype state, nextstate;
@@ -65,18 +65,19 @@ module expand #(parameter K = 128)
       wasdone1    <= done1;
     end
 
+  assign pivot = (done1 & !wasdone1);
+
   // next state logic
   always_comb
-    case(state)
-      S0:                                 nextstate = S1;
-      S1: if       (K == 128)             nextstate = S1;
-          else if ((K == 256) | done1)  nextstate = S2;
-          else                            nextstate = S3;
-      S2: if      ((K == 256) | !done1) nextstate = S1;
-          else                            nextstate = S3;
-      S3: if       (done1)              nextstate = S1;
-          else                            nextstate = S2;
-      default:                            nextstate = S0;
+    if (pivot)                nextstate = S1;
+    else case(state)
+      S0:                     nextstate = S1;
+      S1: if      (K == 128)  nextstate = S1;
+          else if (K == 256)  nextstate = S2;
+          else                nextstate = S3;
+      S2:                     nextstate = S1;
+      S3:                     nextstate = S2;
+      default:                nextstate = S0;
     endcase
 
   // next round constant (rcon for current temp transform) logic
@@ -84,9 +85,10 @@ module expand #(parameter K = 128)
   invgaloismult ig(rcon[31:24], invrconFront);
 
   always_comb
-    if      ( done1 & !wasdone1 )         nextrcon = rcon;
-    else if ( (state == S1) | (state == S3) ) nextrcon = (done1)? {invrconFront, 24'b0} : {rconFront, 24'b0};
-    else                                      nextrcon = rcon;
+    if ((state == S0) | ((state == S1) & (K != 128)) | pivot) nextrcon = rcon;
+    else if (done1)                                           nextrcon = {invrconFront, 24'b0};
+    else                                                      nextrcon = {rconFront, 24'b0};
+
 
   // temp block logic
   assign transform = (done1)? (block[31:0]^block[63:32]) : block[31:0];
@@ -111,17 +113,17 @@ module expand #(parameter K = 128)
 
   // next expansion block logic
   always_comb
-    if      ( state == S0 )                 nextBlock = key;
-    else if ((state == S1) | (state == S3)) nextBlock = temp;
-    else                                    nextBlock = block;
+    if       (state == S0)                        nextBlock = key;
+    else if ((K != 128) & (state == S1) & !pivot) nextBlock = block;
+    else                                          nextBlock = temp;
 
   // output logic
   always_comb
     case(state)
       S0: roundKey = 32'b0;
-      S1: roundKey = block[K-1: K-128];              // first four words of temp XOR'ed with last expansion block
-      S2: roundKey = block[127:0];                   // last four words of last key block
-      S3: roundKey = {block[63:0], temp[K-1: K-64]}; // last two words of last expansion block, first two of current block
+      S1: roundKey = (!wasdone1)? block[K-1: K-128]             : block[127:0];
+      S2: roundKey = (!done1)?    block[127:0]                  : block[K-1: K-128];
+      S3: roundKey = (!done1)?   {block[63:0], temp[K-1: K-64]} : {temp[63:0], block[K-1: K-64]};
       default: roundKey = 32'b0;
     endcase
 
