@@ -27,7 +27,7 @@
     mStm[127:0]:    mixColumns transform applied to hStm
 */
 
-module onecipher (input  logic         clk,
+module ocipher (input  logic         clk,
                input  logic         reset,
                input  logic         done, dir,
                input  logic [127:0] roundKey,

@@ -34,23 +34,20 @@
     invrconFront[7:0]: First word in rcon after multiplication with x^-1 in GF(8)
 */
 
-module expand #(parameter K = 128)
+module oexpand #(parameter K = 128)
                (input  logic          clk, reset,
                 input  logic          done1,
                 input  logic          done2,
                 input  logic [K-1:0]  key,
                 output logic [127:0]  roundKey);
 
-  logic [31:0]  rcon, nextrcon, transform, rotTemp, subTemp, rconTemp, subTransform, subOrgTemp;
+  logic [31:0]  rcon, nextrcon, transform, rotTemp, subTemp, rconTemp;
   logic [K-1:0] block, temp, nextBlock;
   logic [7:0]   rconFront, invrconFront;
   logic         wasdone1, pivot;
 
   typedef enum logic [1:0] {S0, S1, S2, S3} statetype;
   statetype state, nextstate;
-
-  typedef enum logic {FWD, BWD} dirstatetype;
-  dirstatetype dirstate, nextdirstate;
 
   always_ff @(posedge clk)
     if (reset) begin
@@ -69,7 +66,7 @@ module expand #(parameter K = 128)
 
   // next state logic
   always_comb
-    if (pivot)                nextstate = S1;
+    if (pivot & (K != 256))   nextstate = S1;
     else case(state)
       S0:                     nextstate = S1;
       S1: if      (K == 128)  nextstate = S1;
@@ -89,11 +86,21 @@ module expand #(parameter K = 128)
     else if (done1)                                           nextrcon = {invrconFront, 24'b0};
     else                                                      nextrcon = {rconFront, 24'b0};
 
-
   // temp block logic
   assign transform = (done1)? (block[31:0]^block[63:32]) : block[31:0];
   rotate #(1, 4, 8) rw(transform, rotTemp);
-  subword           sw(rotTemp, subTemp);
+
+  always_comb begin
+    if (K == 256) begin
+      if      ((state == S2) & (!done1)) tosub = block[128+32-1:128];
+      else if ((state == S1) & (done1))  tosub = block[128+32-1:128];
+      else tosub = rotTemp;
+    end else begin 
+      tosub = rotTemp;
+    end
+  end
+
+  subword           sw(tosub, subTemp);
   assign rconTemp       = subTemp         ^ nextrcon;
   assign temp[K-1:K-32] = block[K-1:K-32] ^ rconTemp;
 
@@ -102,9 +109,7 @@ module expand #(parameter K = 128)
     for (i = K-32; i > 0; i=i-32) begin: tempAssign
       // unique case for 256-bit expansion block
       if ( (K == 256) && (i == 128) ) begin
-        assign subTransform = (!done1)? temp[i+32-1:i] : block[i+32-1:i];
-        subword so(subTransform, subOrgTemp);
-        assign temp[i-1:i-32]  = block[i-1:i-32]^subOrgTemp;
+        assign temp[i-1:i-32]  = block[i-1:i-32]^subTemp;
       end else begin
         assign temp[i-1:i-32] = (!done1)? (block[i-1:i-32]^temp[i+32-1:i]) : (block[i-1:i-32]^block[i+32-1:i]);
       end
@@ -113,7 +118,10 @@ module expand #(parameter K = 128)
 
   // next expansion block logic
   always_comb
-    if       (state == S0)                        nextBlock = key;
+    if                    (state == S0)           nextBlock = key;
+    else if ((K == 256) & (state == S1) & pivot)  nextBlock = {block[K-1: K-128], temp[127:0]};
+    else if ((K == 256) & (state == S1))          nextBlock = {temp[K-1: K-128], block[127:0]};
+    else if ((K == 256) & (state == S2))          nextBlock = {block[K-1: K -128], temp[127:0]};
     else if ((K != 128) & (state == S1) & !pivot) nextBlock = block;
     else                                          nextBlock = temp;
 
@@ -128,4 +136,3 @@ module expand #(parameter K = 128)
     endcase
 
 endmodule
-
