@@ -73,7 +73,7 @@ module invaes_core #(parameter K = 128)
   endgenerate
 
   assign done1 = (countval1 == cycles);
-  assign done2 = (countval2 == (cycles-1'b1));
+  assign done2 = (countval2 == cycles);
 
 
 endmodule
