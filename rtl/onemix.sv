@@ -21,10 +21,10 @@ module omixcolumns(input logic dir,
                   input  logic [127:0] a,
                   output logic [127:0] y);
 
-  omixcolumn mc0(a[127:96], y[127:96]);
-  omixcolumn mc1(a[95:64],  y[95:64]);
-  omixcolumn mc2(a[63:32],  y[63:32]);
-  omixcolumn mc3(a[31:0],   y[31:0]);
+  omixcolumn mc0(dir, a[127:96], y[127:96]);
+  omixcolumn mc1(dir, a[95:64],  y[95:64]);
+  omixcolumn mc2(dir, a[63:32],  y[63:32]);
+  omixcolumn mc3(dir, a[31:0],   y[31:0]);
 
 endmodule
 

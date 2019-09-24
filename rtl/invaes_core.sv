@@ -57,15 +57,15 @@ module invaes_core #(parameter K = 128)
   logic         done1;
 
   // generate 5 MHz clock for cycles
-  clk_gen #(5 * (10**6)) sck(clk, reset, 1'b1, slwclk);
+  // clk_gen #(5 * (10**6)) sck(clk, reset, 1'b1, slwclk);
 
   // counters for forward and reverse expansion
-  counter #(4)  ct0(slwclk, ce, !done1, 1'b1, countval1);
-  counter #(4)  ct1(slwclk, ce | !done1, !done2, 1'b1, countval2);
+  counter #(4)  ct0(clk, ce, !done1, 1'b1, countval1);
+  counter #(4)  ct1(clk, ce | !done1, !done2, 1'b1, countval2);
 
   // send key a 4-word key schedule to cipher each cycle
-  expand  #(K) ex0(slwclk, ce, done1, done2, key, roundKey);
-  onecipher    ci0(slwclk, ce | (countval2 == cycles-2'b10), done2, dir, roundKey, message, translated); //ciTranslated);
+  expand  #(K) ex0(clk, ce, done1, done2, key, roundKey);
+  onecipher    ci0(clk, ce | (dir & (countval1 == cycles)), done2, dir, roundKey, message, translated); //ciTranslated);
   // invcipher    in0(slwclk, ce | !done1, done2, roundKey, message, invTranslated);
 
   // assign translated = (dir)? invTranslated : ciTranslated;

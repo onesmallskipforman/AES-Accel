@@ -74,12 +74,13 @@ module osbyte (input logic dir,
   assign index = (dir)? invaff : a;
 
   logic [7:0] sbox[0:255];
-  initial $readmemh("../InvAES-Accel/rtl/sbox.txt", sbox);
+  initial $readmemh("../InvAES-Accel/rtl/inv.txt", sbox);
+
   assign tbl = sbox[index];
 
   generate
     for (i = 0; i < 8; i++) begin: affine
-      assign aff[i] = tbl[i] ^ tbl[(i+4)%8] ^ tbl[(i+5)%8] ^ tbl[(i+6)%8] ^ tbl[(i+7)%8] ^ tbl[i];
+      assign aff[i] = tbl[i] ^ tbl[(i+4)%8] ^ tbl[(i+5)%8] ^ tbl[(i+6)%8] ^ tbl[(i+7)%8] ^ c[i];
     end
   endgenerate
 
