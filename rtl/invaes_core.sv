@@ -46,12 +46,11 @@ module invaes_core #(parameter K = 128)
                     (input  logic        clk, reset,
                     input  logic         ce,
                     input  logic [K-1:0] key,
-                    input  logic [127:0] message,
-                    input logic dir, // 0 is fwd, 1 is bwd
+                    input  logic [127:0] cyphertext,
                     output logic         done2,
-                    output logic [127:0] translated);
+                    output logic [127:0] plaintext);
 
-  logic [127:0] roundKey; //, ciTranslated, invTranslated;
+  logic [127:0] roundKey;
   logic [3:0]   countval1, countval2, cycles;
   logic         slwclk;
   logic         done1;
@@ -65,10 +64,7 @@ module invaes_core #(parameter K = 128)
 
   // send key a 4-word key schedule to cipher each cycle
   expand  #(K) ex0(slwclk, ce, done1, done2, key, roundKey);
-  onecipher    ci0(slwclk, ce | (countval2 == cycles-2'b10), done2, dir, roundKey, message, translated); //ciTranslated);
-  // invcipher    in0(slwclk, ce | !done1, done2, roundKey, message, invTranslated);
-
-  // assign translated = (dir)? invTranslated : ciTranslated;
+  invcipher    in0(slwclk, ce | !done1, done2, roundKey, cyphertext, plaintext);
 
   generate
     if (K == 128) begin assign cycles = 4'b1011; end
@@ -77,7 +73,7 @@ module invaes_core #(parameter K = 128)
   endgenerate
 
   assign done1 = (countval1 == cycles);
-  assign done2 = (dir)? (countval2 == (cycles-1'b1)) : done1;
+  assign done2 = (countval2 == (cycles-1'b1));
 
 
 endmodule

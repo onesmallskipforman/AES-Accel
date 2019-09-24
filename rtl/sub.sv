@@ -53,27 +53,6 @@ module subword (input  logic [31:0] word,
 
 endmodule
 
-
-// module sbyte (input logic [7:0] a,
-//               output logic [7:0] y);
-  
-//   logic [7:0] b;
-//   assign c = 8'h63;
-
-//   logic [7:0] sbox[0:255];
-//   initial $readmemh("../InvAES-Accel/rtl/sbox.txt", sbox);
-//   assign b = sbox[a];
-
-//   genvar i;
-//   generate
-//     for (i = 0; i < 8; i++) begin: bitsubs
-//       assign y[i] = b[i] ^ b[(i+4)%8] ^ b[(i+5)%8] ^ b[(i+6)%8] ^ b[(i+7)%8] ^ c[i];
-//     end
-//   endgenerate
-
-// endmodule
-
-
 /*
   Below is a module for sbox the infamous AES byte
   substitution with magic numbers.

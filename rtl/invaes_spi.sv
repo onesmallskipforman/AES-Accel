@@ -22,7 +22,7 @@
 
   Outputs:
     miso:                     output to spi master
-    key[K:0]:               128-bit encryption key
+    key[K:0]:                 128-bit encryption key
     cyphertext[127:0]:        encrpyted 128-bit message
 
   Internal Vars:
@@ -38,8 +38,7 @@ module invaes_spi #(parameter K = 128)
                    input  logic [127:0] plaintext,
                    output logic         miso,
                    output logic [K-1:0] key,
-                   output logic [127:0] cyphertext,
-                   output logic [7:0]   dirByte);
+                   output logic [127:0] cyphertext);
 
   logic         miso_delayed, wasdone;
   logic [127:0] plaintextcaptured;
@@ -49,8 +48,8 @@ module invaes_spi #(parameter K = 128)
   // then deassert load, wait until done
   // then apply 128 sclks to shift out plaintext, starting with plaintext[0]
   always_ff @(posedge sclk)
-      if (!wasdone)  {plaintextcaptured, cyphertext, key, dirByte} = {plaintext, cyphertext[126:0], key, dirByte, mosi};
-      else           {plaintextcaptured, cyphertext, key, dirByte} = {plaintextcaptured[126:0], cyphertext, key, dirByte, mosi};
+      if (!wasdone)  {plaintextcaptured, cyphertext, key} = {plaintext, cyphertext[126:0], key, mosi};
+      else           {plaintextcaptured, cyphertext, key} = {plaintextcaptured[126:0], cyphertext, key, mosi};
 
   // miso should change on the negative edge of sclk
   always_ff @(negedge sclk) begin

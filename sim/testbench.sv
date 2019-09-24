@@ -6,8 +6,7 @@
 module testbench();
 
   // number of key bits
-  parameter K = 128;
-  parameter logic [7:0] dirByte = 8'b0; 
+  parameter K = 256;
 
   logic clk, reset, load, done, sck, sdi, sdo;
   logic [K-1:0] key;
@@ -20,40 +19,22 @@ module testbench();
 
   // test case
   initial begin
-    if (dirByte)
-      if (K == 128) begin         
-        // Test case from FIPS-197 Appendix A.1, B
-        cyphertext <= 128'h3925841D02DC09FBDC118597196A0B32;
-        expected   <= 128'h3243F6A8885A308D313198A2E0370734;
-        key        <= 128'h2B7E151628AED2A6ABF7158809CF4F3C;
-      end else if (K == 192) begin 
-        // 192-bit test case from Appendix C.2
-        cyphertext <= 128'hdda97ca4864cdfe06eaf70a0ec0d7191;
-        expected   <= 128'h00112233445566778899aabbccddeeff;
-        key        <= 192'h000102030405060708090a0b0c0d0e0f1011121314151617;
-      end else begin               
-        // 256-bit test case from Appendix C.3
-        cyphertext <= 128'h8ea2b7ca516745bfeafc49904b496089;
-        expected   <= 128'h00112233445566778899aabbccddeeff;
-        key        <= 256'h000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f;
-      end
-    else // TODO: this is plaintext, not cyphertext. Fix variable names
-      if (K == 128) begin
-        // Test case from FIPS-197 Appendix A.1, B
-        key       <= 128'h2B7E151628AED2A6ABF7158809CF4F3C;
-        cyphertext <= 128'h3243F6A8885A308D313198A2E0370734;
-        expected  <= 128'h3925841D02DC09FBDC118597196A0B32;
-      end else if (K == 192) begin
-        // 192-bit test case from Appendix C.2
-        expected       <= 128'hdda97ca4864cdfe06eaf70a0ec0d7191;
-        cyphertext <= 128'h00112233445566778899aabbccddeeff;
-        key  <= 192'h000102030405060708090a0b0c0d0e0f1011121314151617;
-      end else begin
-        // 256-bit test case from Appendix C.3
-        expected       <= 128'h8ea2b7ca516745bfeafc49904b496089;
-        cyphertext <= 128'h00112233445566778899aabbccddeeff;
-        key  <= 256'h000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f;
-      end
+    if (K == 128) begin         
+      // Test case from FIPS-197 Appendix A.1, B
+      cyphertext <= 128'h3925841D02DC09FBDC118597196A0B32;
+      expected   <= 128'h3243F6A8885A308D313198A2E0370734;
+      key        <= 128'h2B7E151628AED2A6ABF7158809CF4F3C;
+    end else if (K == 192) begin 
+      // 192-bit test case from Appendix C.2
+      cyphertext <= 128'hdda97ca4864cdfe06eaf70a0ec0d7191;
+      expected   <= 128'h00112233445566778899aabbccddeeff;
+      key        <= 192'h000102030405060708090a0b0c0d0e0f1011121314151617;
+    end else begin               
+      // 256-bit test case from Appendix C.3
+      cyphertext <= 128'h8ea2b7ca516745bfeafc49904b496089;
+      expected   <= 128'h00112233445566778899aabbccddeeff;
+      key        <= 256'h000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f;
+    end
   end
 
   // Alternate test case from Appendix C.1
@@ -77,9 +58,9 @@ module testbench();
     load = 1'b0; #10; load = 1'b1;
   end
 
-  assign comb = {cyphertext, key, dirByte};
+  assign comb = {cyphertext, key};
 
-  parameter total = K + 128 + 8;
+  parameter total = K + 128;
 
   // shift in test vectors, wait until done, and shift out result
   always @(posedge clk) begin
