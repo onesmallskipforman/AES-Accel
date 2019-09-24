@@ -61,9 +61,9 @@ module ocipher (input  logic         clk,
 
   // cipher state transformation logic
   osubbytes   sb1(dir, stm, bStm);
-  assign toshift = (dir)? {bStm[127:96], bStm[95:64], bStm[63:32], bStm[31:0]} : bStm;
+  assign toshift = (dir)? {bStm[31:0], bStm[63:32], bStm[95:64], bStm[127:96]} : bStm;
   shiftrows   sr1(toshift, shifted);
-  assign hStm = (dir)? {shifted[127:96], shifted[95:64], shifted[63:32], shifted[31:0]} : shifted;
+  assign hStm = (dir)? {shifted[31:0], shifted[63:32], shifted[95:64], shifted[127:96]} : shifted;
 
   assign tomix = (dir)? (hStm^roundKey) : hStm; 
   omixcolumns  mx1(dir, tomix, mStm);
@@ -72,7 +72,7 @@ module ocipher (input  logic         clk,
   always_comb
     if       (state == S0)                        nextStm = in^roundKey; // cycle 1
     else if ((state == S1) & (nextstate == S1))   nextStm = (dir)? mStm : (mStm^roundKey); // cycles 2-10
-    else if ((state == S1) & done)                nextStm = hStm^roundKey; // cycle 11
+    else if ((state == S1) & done)               nextStm = hStm^roundKey; // cycle 11
     else                                          nextStm = stm;             // resting
 
   // output logic

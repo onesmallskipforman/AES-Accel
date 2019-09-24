@@ -41,7 +41,7 @@ module oexpand #(parameter K = 128)
                 input  logic [K-1:0]  key,
                 output logic [127:0]  roundKey);
 
-  logic [31:0]  rcon, nextrcon, transform, rotTemp, subTemp, rconTemp;
+  logic [31:0]  rcon, nextrcon, transform, rotTemp, subTemp, rconTemp, tosub;
   logic [K-1:0] block, temp, nextBlock;
   logic [7:0]   rconFront, invrconFront;
   logic         wasdone1, pivot;
@@ -66,7 +66,7 @@ module oexpand #(parameter K = 128)
 
   // next state logic
   always_comb
-    if (pivot & (K != 256))   nextstate = S1;
+    if (pivot & (K == 192))   nextstate = S2;
     else case(state)
       S0:                     nextstate = S1;
       S1: if      (K == 128)  nextstate = S1;
@@ -82,25 +82,24 @@ module oexpand #(parameter K = 128)
   invgaloismult ig(rcon[31:24], invrconFront);
 
   always_comb
-    if ((state == S0) | ((state == S1) & (K != 128)) | pivot) nextrcon = rcon;
+    if (pivot & (K != 256)) nextrcon = {rconFront, 24'b0};
+    else if ((state == S0) | ((state == S1) & (K == 192)) | ((state == S2) & (K == 256)) | pivot) nextrcon = rcon;
     else if (done1)                                           nextrcon = {invrconFront, 24'b0};
     else                                                      nextrcon = {rconFront, 24'b0};
 
   // temp block logic
-  assign transform = (done1)? (block[31:0]^block[63:32]) : block[31:0];
+  assign transform = (done1 & (K != 256))? (block[31:0]^block[63:32]) : block[31:0];
   rotate #(1, 4, 8) rw(transform, rotTemp);
 
-  always_comb begin
-    if (K == 256) begin
+  always_comb
+    if (K == 256)
       if      ((state == S2) & (!done1)) tosub = block[128+32-1:128];
       else if ((state == S1) & (done1))  tosub = block[128+32-1:128];
       else tosub = rotTemp;
-    end else begin 
+    else 
       tosub = rotTemp;
-    end
-  end
 
-  subword           sw(tosub, subTemp);
+  subword sw(tosub, subTemp);
   assign rconTemp       = subTemp         ^ nextrcon;
   assign temp[K-1:K-32] = block[K-1:K-32] ^ rconTemp;
 
@@ -119,8 +118,10 @@ module oexpand #(parameter K = 128)
   // next expansion block logic
   always_comb
     if                    (state == S0)           nextBlock = key;
-    else if ((K == 256) & (state == S1) & pivot)  nextBlock = {block[K-1: K-128], temp[127:0]};
+    else if ((K != 256) & pivot)                  nextBlock = block;
+    else if ((K == 256) & (state == S1) & done1)  nextBlock = {block[K-1: K-128], temp[127:0]};
     else if ((K == 256) & (state == S1))          nextBlock = {temp[K-1: K-128], block[127:0]};
+    else if ((K == 256) & (state == S2) & done1)  nextBlock = {temp[K-1: K -128], block[127:0]};
     else if ((K == 256) & (state == S2))          nextBlock = {block[K-1: K -128], temp[127:0]};
     else if ((K != 128) & (state == S1) & !pivot) nextBlock = block;
     else                                          nextBlock = temp;

@@ -47,12 +47,6 @@ module osubword (input logic dir,
   osbyte sb2(dir, word[15:8],  subbed[15:8]);
   osbyte sb3(dir, word[7:0],   subbed[7:0]);
 
-
-  // sbox sb0(word[31:24], subbed[31:24]);
-  // sbox sb1(word[23:16], subbed[23:16]);
-  // sbox sb2(word[15:8],  subbed[15:8]);
-  // sbox sb3(word[7:0],   subbed[7:0]);
-
 endmodule
 
 
@@ -60,14 +54,14 @@ module osbyte (input logic dir,
               input logic [7:0] a,
               output logic [7:0] y);
   
-  logic [7:0] b, c, invaff, aff, index, tbl;
-  // assign b = 
-  assign c = 8'h63;
+  logic [7:0] b, invaff, aff, index, tbl;
+  parameter logic [7:0] c = 8'h63;
+  parameter logic [7:0] invc = 8'h05;
 
   genvar i;
   generate
     for (i = 0; i < 8; i++) begin: invaffine
-      assign invaff[i] = a[i] ^ a[(i+4)%8] ^ a[(i+5)%8] ^ a[(i+6)%8] ^ a[(i+7)%8] ^ c[i];
+      assign invaff[i] = a[(i+2)%8] ^ a[(i+5)%8] ^ a[(i+7)%8] ^ invc[i];
     end
   endgenerate
 
@@ -87,28 +81,3 @@ module osbyte (input logic dir,
   assign y = (dir)? tbl : aff;
 
 endmodule
-
-
-/*
-  Below is a module for sbox the infamous AES byte
-  substitution with magic numbers.
-
-  Inputs:
-    a[7:0]: input byte
-
-  Outputs:
-    y[7:0]: sbox substituted byte
-*/
-
-// module sbox(input  logic [7:0] a,
-//             output logic [7:0] y);
-
-//   // sbox implemented as a ROM
-//   logic [7:0] sbox[0:255];
-
-//   initial $readmemh("../InvAES-Accel/rtl/sbox.txt", sbox);
-//   assign y = sbox[a];
-
-// endmodule
-
-

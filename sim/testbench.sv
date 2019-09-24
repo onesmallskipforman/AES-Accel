@@ -7,7 +7,7 @@ module testbench();
 
   // number of key bits
   parameter K = 256;
-  parameter logic [7:0] dirByte = 8'b0; 
+  parameter logic [7:0] dirByte = 8'b1; 
 
   logic clk, reset, load, done, sck, sdi, sdo;
   logic [K-1:0] key;
