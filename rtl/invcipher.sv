@@ -59,10 +59,10 @@ module invcipher (input  logic         clk,
     endcase
 
   // inverse cipher state transformation logic
-  // invshiftrows   isr1(stm, ihStm);
+  invshiftrows   isr1(stm, ihStm);
   invsubbytes    isb1(ihStm, ibStm);
   assign rStm = ibStm ^ roundKey;
-  // invmixcolumns  imx1(rStm, imStm);
+  invmixcolumns  imx1(rStm, imStm);
 
   // next inverse cipher state logic
   always_comb

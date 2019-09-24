@@ -29,7 +29,7 @@
     cyphertext[127:0]: encrypted 128-bit message
 */
 
-module invaes #(parameter K = 128)
+module invaes #(parameter K = 192)
                (input  logic clk, reset,
                 input  logic r_sclk,
                 input  logic r_mosi,

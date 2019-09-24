@@ -62,10 +62,9 @@ module cipher (input  logic         clk,
   // cipher state transformation logic
   subbytes    sb1(stm, bStm);
   shiftrows   sr1(bStm, hStm);
-
-  assign test = {hStm[127:96], hStm[95:64], hStm[63:32], hStm[31:0]};
-
-  mixcolumns  mx1(test, mStm);
+  mixcolumns  mx1(hStm, mStm);
+  // assign test = {mStm[127:96], mStm[95:64], mStm[63:32], mStm[31:0]};
+  // invshiftrows   isr1(test, ihStm);
 
   // next cipher state logic
   always_comb
