@@ -42,29 +42,28 @@
     done1:             bit signalling forward key expansion is complete
 */
 
-module invaes_core #(parameter K = 128)
-                    (input  logic        clk, reset,
-                    input  logic         ce,
+module invaes_core #(parameter K)
+                    (input  logic        clk,
+                    input  logic         spi_done,
                     input  logic [K-1:0] key,
                     input  logic [127:0] cyphertext,
                     output logic         done2,
                     output logic [127:0] plaintext);
 
   logic [127:0] roundKey;
-  logic [3:0]   countval1, countval2, cycles;
+  logic [4:0]   countval, cycles;
   logic         slwclk;
   logic         done1;
 
   // generate 5 MHz clock for cycles
-  clk_gen #(5 * (10**6)) sck(clk, reset, 1'b1, slwclk);
+  // clk_gen #(5 * (10**6)) sck(clk, reset, 1'b1, slwclk);
 
   // counters for forward and reverse expansion
-  counter #(4)  ct0(slwclk, ce, !done1, 1'b1, countval1);
-  counter #(4)  ct1(slwclk, ce | !done1, !done2, 1'b1, countval2);
+  counter  #(5) ct0(clk, spi_done, !done1, 1'b1, countval);
 
   // send key a 4-word key schedule to cipher each cycle
-  expand  #(K) ex0(slwclk, ce, done1, done2, key, roundKey);
-  invcipher    in0(slwclk, ce | !done1, done2, roundKey, cyphertext, plaintext);
+  expandop #(K) ex0(clk, spi_done, done1, done2, key, roundKey);
+  invcipher     in0(clk, spi_done | (countval == cycles-1'b1), done2, roundKey, cyphertext, plaintext);
 
   generate
     if (K == 128) begin assign cycles = 4'b1011; end
@@ -72,8 +71,7 @@ module invaes_core #(parameter K = 128)
     if (K == 256) begin assign cycles = 4'b1111; end
   endgenerate
 
-  assign done1 = (countval1 == cycles);
-  assign done2 = (countval2 == cycles);
-
+  assign done1 = (countval == cycles);
+  assign done2 = (countval == 2*cycles);
 
 endmodule

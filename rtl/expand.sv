@@ -34,6 +34,269 @@
     invrconFront[7:0]: First word in rcon after multiplication with x^-1 in GF(8)
 */
 
+module expandop #(parameter K)
+                 (input  logic         clk, reset,
+                  input  logic         done1, done2,
+                  input  logic [K-1:0] key,
+                  output logic [127:0] roundKey);
+
+  generate
+    if (K == 128) begin expand128 e128(clk, reset, done1, done2, key, roundKey); end
+    if (K == 192) begin expand192 e192(clk, reset, done1, done2, key, roundKey); end
+    if (K == 256) begin expand256 e256(clk, reset, done1, done2, key, roundKey); end
+  endgenerate
+
+endmodule
+
+
+
+
+
+
+
+module expand128 (input  logic          clk, reset,
+                  input  logic          done1,
+                  input  logic          done2,
+                  input  logic [127:0]  key,
+                  output logic [127:0]  roundKey);
+
+  logic [31:0]  rcon, nextrcon, transform, rotTemp, subTemp, rconTemp;
+  logic [127:0] block, temp, nextBlock;
+  logic [7:0]   rconFront, invrconFront;
+  logic         wasdone1, pivot;
+
+  always_ff @(posedge clk)
+    if (reset) begin
+      block       <= key;
+      rcon        <= 32'h8d000000;
+      wasdone1    <= 1'b0;
+    end else if (!done2) begin
+      block       <= nextBlock;
+      rcon        <= nextrcon;
+      wasdone1    <= done1;
+    end
+
+  assign pivot = (done1 & !wasdone1);
+
+  // next round constant (rcon for current temp transform) logic
+  galoismult    gm(rcon[31:24], rconFront);
+  invgaloismult ig(rcon[31:24], invrconFront);
+
+  always_comb
+    if      (pivot) nextrcon = rcon;
+    else if (done1) nextrcon = {invrconFront, 24'b0};
+    else            nextrcon = {rconFront, 24'b0};
+
+  // temp block logic
+  assign transform = (done1)? (block[31:0]^block[63:32]) : block[31:0];
+  rotate #(1, 4, 8) rw(transform, rotTemp);
+  subword sw(rotTemp, subTemp);
+  assign rconTemp = subTemp ^ nextrcon;
+
+  always_comb begin
+    temp[127:96] =            block[127:96] ^ rconTemp;
+    temp[95:64]  = (!done1)? (block[95:64]  ^ temp[127:96]) : (block[95:64] ^ block[127:96]);
+    temp[63:32]  = (!done1)? (block[63:32]  ^ temp[95:64])  : (block[63:32] ^ block[95:64]);
+    temp[31:0]   = (!done1)? (block[31:0]   ^ temp[63:32])  : (block[31:0]  ^ block[63:32]);
+  end
+
+  // next expansion block and output logic
+  assign nextBlock = temp;
+  assign roundKey = block;
+
+endmodule
+
+
+
+
+
+module expand256 (input  logic          clk, reset,
+                  input  logic          done1,
+                  input  logic          done2,
+                  input  logic [255:0]  key,
+                  output logic [127:0]  roundKey);
+
+  logic [31:0]  rcon, nextrcon, transform, rotTemp, subTemp, rconTemp, tosub;
+  logic [255:0] block, nextBlock;
+  logic [127:0] temp, replace;
+  logic [7:0]   rconFront, invrconFront;
+  logic         wasdone1, pivot;
+
+  typedef enum logic {S0, S1} statetype;
+  statetype state, nextstate;
+
+  always_ff @(posedge clk)
+    if (reset) begin
+      state       <= S0;
+      block       <= key;
+      rcon        <= 32'h8d000000;
+      wasdone1    <= 1'b0;
+    end else if (!done2) begin
+      state       <= nextstate;
+      block       <= nextBlock;
+      rcon        <= nextrcon;
+      wasdone1    <= done1;
+    end
+
+  assign pivot = (done1 & !wasdone1);
+
+  // next state logic
+  always_comb
+    case (state)
+      S0:      nextstate = S1;
+      S1:      nextstate = S0;
+      default: nextstate = S0;
+    endcase
+
+  // next round constant (rcon for current temp transform) logic
+  galoismult    gm(rcon[31:24], rconFront);
+  invgaloismult ig(rcon[31:24], invrconFront);
+
+  always_comb
+    if      (pivot) nextrcon = rcon;
+    else if (done1) nextrcon = {invrconFront, 24'b0};
+    else            nextrcon = {rconFront, 24'b0};
+
+  // temp block logic
+  assign transform = (state == S0)? block[31:0] : block[159:128];
+  rotate #(1, 4, 8) rw(transform, rotTemp);
+  assign tosub = (state == S0)? rotTemp : transform;
+  subword sw(tosub, subTemp);
+  assign rconTemp = subTemp ^ nextrcon;
+  assign temp[127:96] = (state == S0)? (block[K-1:K-32]^rconTemp) : (block[127:96]^subTemp);
+
+  assign replace = (state == S0)? block[255:128] : block[127:0];
+
+  always_comb begin
+    temp[127:96] = (state == S0)? (replace[127:96] ^ rconTemp)     : (replace[127:96] ^ subTemp);
+    temp[95:64]  = (!done1)?      (replace[95:64]  ^ temp[127:96]) : (replace[95:64]  ^ replace[127:96]);
+    temp[63:32]  = (!done1)?      (replace[63:32]  ^ temp[95:64])  : (replace[63:32]  ^ replace[95:64]);
+    temp[31:0]   = (!done1)?      (replace[31:0]   ^ temp[63:32])  : (replace[31:0]   ^ replace[63:32]);
+  end
+
+  // next expansion block and output logic
+  assign nextBlock = (state == S0)? {temp, block[127:0]} : {block[K-1:0], temp};
+  assign roundKey  = (state == S0)? block[K-1: K-128]    : block[127:0];
+
+endmodule
+
+
+
+module expand192 (input  logic          clk, reset,
+                  input  logic          done1,
+                  input  logic          done2,
+                  input  logic [191:0]  key,
+                  output logic [127:0]  roundKey);
+
+  logic [31:0]  rcon, nextrcon, transform, rotTemp, subTemp, rconTemp, tosub;
+  logic [191:0] block, nextBlock;
+  logic [127:0] temp, replace;
+  logic [7:0]   rconFront, invrconFront;
+  logic         wasdone1, pivot;
+
+  typedef enum logic [1:0] {S0, S1, S2} statetype;
+  statetype state, nextstate;
+
+  always_ff @(posedge clk)
+    if (reset) begin
+      state       <= S0;
+      block       <= key;
+      rcon        <= 32'h8d000000;
+      wasdone1    <= 1'b0;
+    end else if (!done2) begin
+      state       <= nextstate;
+      block       <= nextBlock;
+      rcon        <= nextrcon;
+      wasdone1    <= done1;
+    end
+
+  assign pivot = (done1 & !wasdone1);
+
+  // next state logic
+  always_comb
+    case (state)
+      S0: if (!done1) nextstate = S1;
+          else        nextstate = S2;
+      S1: if (!done1) nextstate = S2;
+          else        nextstate = S0;
+      S2: if (!done1) nextstate = S0;
+          else        nextstate = S1;
+      default:        nextstate = S0;
+    endcase
+
+  // next round constant (rcon for current temp transform) logic
+  galoismult    gm(rcon[31:24], rconFront);
+  invgaloismult ig(rcon[31:24], invrconFront);
+
+  always_comb
+    if      (pivot) nextrcon = rcon;
+    else if (done1) nextrcon = {invrconFront, 24'b0};
+    else            nextrcon = {rconFront, 24'b0};
+
+  // temp block logic
+  assign transform = (state == S0)? block[31:0] : block[159:128];
+  rotate #(1, 4, 8) rw(transform, rotTemp);
+  assign tosub = (state == S0)? rotTemp : transform;
+  subword sw(tosub, subTemp);
+  assign rconTemp = subTemp^nextrcon;
+
+  always_comb
+    if      (state == S0) replace = block[192:64];
+    else if (state == S1) replace = {block[63:0], block[192:128]};
+    else                  replace = block[127:0];
+
+  always_comb begin
+    if      (state == S0) temp[127:96] = replace[127:96] ^ rconTemp;
+    else if (state == S1) temp[127:96] = replace[127:96] ^ block[95:64];
+    else                  temp[127:96] = replace[127:96] ^ block[159:128];
+
+    temp[95:64] = (!done1)? (replace[95:64]^temp[127:96]) : (replace[95:64]^replace[127:96]);
+
+    if (state == S1) temp[63:32] =            replace[63:32] ^ rconTemp;
+    else             temp[63:32] = (!done1)? (replace[63:32] ^ temp[95:64]) : (replace[63:32] ^ replace[95:64]);
+
+    temp[31:0] = (!done1)? (replace[31:0]^temp[63:32]) : (replace[31:0]^replace[63:32]);
+  end
+
+  // next expansion block and output logic
+  always_comb begin
+    if      (state == S0) nextBlock = {temp, block[63:0]};
+    else if (state == S2) nextBlock = {block[127:64], temp};
+    else                  nextBlock = {temp[63:0], block[127:64], temp[127:64]};
+
+    if      (state == S0) roundKey =  block[191:160];
+    else if (state == S1) roundKey = {block[63:0], block[191:160]};
+    else                  roundKey =  block[127:0];
+  end
+
+endmodule
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 module expand #(parameter K = 128)
                (input  logic          clk, reset,
                 input  logic          done1,
@@ -96,7 +359,7 @@ module expand #(parameter K = 128)
       if      ((state == S2) & (!done1)) tosub = block[128+32-1:128];
       else if ((state == S1) & (done1))  tosub = block[128+32-1:128];
       else tosub = rotTemp;
-    else 
+    else
       tosub = rotTemp;
 
   subword sw(tosub, subTemp);

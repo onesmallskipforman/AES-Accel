@@ -36,28 +36,9 @@ module invcipher (input  logic         clk,
 
   logic [127:0] nextStm, stm, ibStm, ihStm, imStm, rStm;
 
-  typedef enum logic [1:0] {START, S0, S1, S2} statetype;
-  statetype state, nextstate;
-
   always_ff @(posedge clk)
-    if (reset) begin
-      state <= START;
-      stm   <= 0;
-    end else if (!done) begin
-      state <= nextstate;
-      stm   <= nextStm;
-    end
-
-  // next state logic
-  always_comb
-    case(state)
-      START:         nextstate = S0;
-      S0:            nextstate = S1;
-      S1: if (done)  nextstate = S2;
-          else       nextstate = S1;
-      S2:            nextstate = S2;
-      default:       nextstate = S0;
-    endcase
+    if      (reset) stm <= in^roundKey;
+    else if (!done) stm <= nextStm;
 
   // inverse cipher state transformation logic
   invshiftrows   isr1(stm, ihStm);
@@ -67,10 +48,8 @@ module invcipher (input  logic         clk,
 
   // next inverse cipher state logic
   always_comb
-    if       (state == S0)                        nextStm = in^roundKey; // cycle 1
-    else if ((state == S1) & (nextstate == S1))   nextStm = imStm;       // cycles 2-10
-    else if ((state == S1) & done)                nextStm = rStm;        // cycle 11
-    else                                          nextStm = stm;         // resting
+    if (!done) nextStm = imStm; // cycles 2-10
+    else       nextStm = rStm;  // cycle 11
 
   // output logic
   assign out = nextStm;
