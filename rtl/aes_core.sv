@@ -47,21 +47,25 @@ module aes_core #(parameter K = 128)
                   output logic [127:0] cyphertext);
 
   logic [127:0] roundKey;
-  logic [3:0]   countval;
+  logic [3:0]   countval, cycles;
   logic         slwclk;
 
   // generate 5 MHz clock for cycles
-  clk_gen #(5 * (10**6)) sck(clk, reset, 1'b1, slwclk);
-  counter #(4)           cnt(slwclk, ce, !done, 1'b1, countval);
+  // clk_gen #(5 * (10**6)) sck(clk, reset, 1'b1, slwclk);
+
+  // counter for cipher and expansion steps
+  counter #(4) cnt(clk, ce, !done, 1'b1, countval);
 
   // send key a 4-word key schedule to cipher each cycle
-  keyexpansion #(K) ke0(slwclk, ce, done, key, roundKey);
-  cipher            ci0(slwclk, ce, done, roundKey, plaintext, cyphertext);
+  expand  #(K) ke0(clk, ce, done, key, roundKey);
+  cipher       ci0(clk, ce, done, roundKey, plaintext, cyphertext);
 
   generate
-    if (K == 128) begin assign done = (countval == 4'b1011); end
-    if (K == 192) begin assign done = (countval == 4'b1101); end
-    if (K == 256) begin assign done = (countval == 4'b1111); end
+    if (K == 128) begin assign cycles = 4'b1011; end
+    if (K == 192) begin assign cycles = 4'b1101; end
+    if (K == 256) begin assign cycles = 4'b1111; end
   endgenerate
+
+  assign done = (countval == cycles);
 
 endmodule

@@ -66,10 +66,10 @@ module cipher (input  logic         clk,
 
   // next cipher state logic
   always_comb
-    if       (state == S0)                        nextStm = in   ^ roundKey; // cycle 1
-    else if ((state == S1) & (nextstate == S1))   nextStm = mStm ^ roundKey; // cycles 2-10
-    else if ((state == S1) & done)                nextStm = hStm ^ roundKey; // cycle 11
-    else                                          nextStm = stm;             // resting
+    if       (state == S0)          nextStm = in   ^ roundKey; // cycle 1
+    else if ((state == S1) & !done) nextStm = mStm ^ roundKey; // cycles 2-10
+    else if ((state == S1) &  done) nextStm = hStm ^ roundKey; // cycle 11
+    else                            nextStm = stm;             // resting
 
   // output logic
   assign out = nextStm;

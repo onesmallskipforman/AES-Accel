@@ -34,7 +34,7 @@
     rconFront[7:0]:   First word in rcon
 */
 
-module keyexpansion #(parameter K = 128)
+module expand #(parameter K = 128)
                (input  logic          clk, reset,
                 input  logic          done,
                 input  logic [K-1:0]  key,
