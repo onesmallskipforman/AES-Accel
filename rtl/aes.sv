@@ -5,7 +5,7 @@
   top-level module containing SPI coms and AES core
 
   Below is the top level module for an AES hardware accelerator. This module
-  is designed to recieve key and plaintext from a rasberry pi over SPI
+  is designed to recieve key and message from a rasberry pi over SPI
   communication, and then perform AES encryption. 128-, 192-, and 256-bit AES
   Encryptions are supported.
 
@@ -25,8 +25,8 @@
 
   Internal Variables:
     key[K-1:0]:        K-bit encryption key
-    plaintext[K-1:0]:  unecrpyted K-bit message
-    cyphertext[K-1:0]: encrypted K-bit message
+    message[K-1:0]:  unecrpyted K-bit message
+    translated[K-1:0]: encrypted K-bit message
 */
 
 module aes #(parameter K = 128)
@@ -46,9 +46,11 @@ module aes #(parameter K = 128)
   endgenerate
 
   logic [K-1:0] key;
-  logic [127:0] plaintext, cyphertext;
+  logic [127:0] message, translated;
+  logic [7:0] dirByte;
 
-  aes_spi  #(K) spi(r_sclk, r_mosi, done, cyphertext, r_miso, key, plaintext);
-  aes_core #(K) core(clk, reset, r_ce, key, plaintext, done, cyphertext);
+
+  aes_spi  #(K) spi(r_sclk, r_mosi, done, translated, r_miso, key, message, dirByte);
+  aes_core #(K) core(clk, reset, r_ce, key, message, dirByte[0], done, translated);
 
 endmodule

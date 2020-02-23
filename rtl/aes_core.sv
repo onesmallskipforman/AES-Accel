@@ -42,31 +42,33 @@ module aes_core #(parameter K = 128)
                  (input  logic         clk, reset,
                   input  logic         ce,
                   input  logic [K-1:0] key,
-                  input  logic [127:0] plaintext,
-                  output logic         done,
-                  output logic [127:0] cyphertext);
+                  input  logic [127:0] message,
+                  input  logic         dir,          // 0 is fwd
+                  output logic         done2,
+                  output logic [127:0] translated);
 
-  logic [127:0] roundKey;
-  logic [3:0]   countval, cycles;
-  logic         slwclk;
+  logic [127:0] roundKey; //, encrypted, decrypted;
+  logic [3:0]   countval;
+  logic         slwclk, done1;
 
 
   // generate 5 MHz clock for cycles
   // clk_gen #(5 * (10**6)) sck(clk, reset, 1'b1, slwclk);
 
   // counter for cipher and expansion steps
-  counter #(4) cnt(clk, ce, !done, 1'b1, countval);
+  counter #(5) cnt(clk, ce, !done2, 1'b1, countval);
 
   // send key a 4-word key schedule to cipher each cycle
-  expand  #(K) ke0(clk, ce, done, key, roundKey);
-  cipher       ci0(clk, ce, done, roundKey, plaintext, cyphertext);
+  expand  #(K) ke0(clk, ce, done1, key, roundKey);
+  // cipher       ci0(clk, ce, done, roundKey, message, encrypted);
+  // invcipher    in0(clk, ce | (countval <= cycles-1'b1), done2, roundKey, message, decrypted);
+  // assign translated = (dir)? decrypted : encrypted;
 
-  generate
-    if (K == 128) begin assign cycles = 4'b1011; end
-    if (K == 192) begin assign cycles = 4'b1101; end
-    if (K == 256) begin assign cycles = 4'b1111; end
-  endgenerate
+  ocipher      ci0(clk, ce | (dir & (countval == cycles-1'b1)), done2, dir, roundKey, message, translated);
 
-  assign done = (countval == cycles);
+  parameter logic [3:0] cycles = (K == 128)? 4'b1011 : (K == 192)? 4'b1101 : 4'b1111;
+
+  assign done1 = (countval >= cycles);
+  assign done2 = (dir)? (countval == 2*cycles) : done1;
 
 endmodule
