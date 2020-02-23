@@ -36,7 +36,7 @@ module ocipher (input  logic         clk,
 
   logic [127:0] nextStm, stm, bStm, hStm, mStm, toshift, shifted, tomix;
 
-  typedef enum logic [1:0] {START, S0, S1, S2} statetype;
+  typedef enum logic [1:0] {START, S0, S1} statetype;
   statetype state, nextstate;
 
   always_ff @(posedge clk)
@@ -51,12 +51,10 @@ module ocipher (input  logic         clk,
   // next state logic
   always_comb
     case(state)
-      START:         nextstate = S0;
-      S0:            nextstate = S1;
-      S1: if (done)  nextstate = S2;
-          else       nextstate = S1;
-      S2:            nextstate = S2;
-      default:       nextstate = S0;
+      START:   nextstate = S0;
+      S0:      nextstate = S1;
+      S1:      nextstate = S1;
+      default: nextstate = S0;
     endcase
 
   // cipher state transformation logic
@@ -70,10 +68,9 @@ module ocipher (input  logic         clk,
 
   // next cipher state logic
   always_comb
-    if       (state == S0)                        nextStm = in^roundKey; // cycle 1
-    else if ((state == S1) & (nextstate == S1))   nextStm = (dir)? mStm : (mStm^roundKey); // cycles 2-10
-    else if ((state == S1) & done)               nextStm = hStm^roundKey; // cycle 11
-    else                                          nextStm = stm;             // resting
+    if      (state == S0) nextStm = in^roundKey;                   // cycle 1
+    else if (!done)       nextStm = (dir)? mStm : (mStm^roundKey); // cycles 2-10
+    else                  nextStm = hStm^roundKey;                 // cycle 11
 
   // output logic
   assign out = nextStm;

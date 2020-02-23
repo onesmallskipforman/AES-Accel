@@ -43,12 +43,12 @@ module aes_core #(parameter K = 128)
                   input  logic         ce,
                   input  logic [K-1:0] key,
                   input  logic [127:0] message,
-                  input  logic         dir,          // 0 is fwd
+                  // input  logic         dir,          // 0 is fwd
                   output logic         done2,
                   output logic [127:0] translated);
 
   logic [127:0] roundKey; //, encrypted, decrypted;
-  logic [3:0]   countval;
+  logic [4:0]   countval;
   logic         slwclk, done1;
 
 
@@ -60,15 +60,16 @@ module aes_core #(parameter K = 128)
 
   // send key a 4-word key schedule to cipher each cycle
   expand  #(K) ke0(clk, ce, done1, key, roundKey);
-  // cipher       ci0(clk, ce, done, roundKey, message, encrypted);
+  cipher       ci0(clk, ce, done1, roundKey, message, translated);
   // invcipher    in0(clk, ce | (countval <= cycles-1'b1), done2, roundKey, message, decrypted);
   // assign translated = (dir)? decrypted : encrypted;
 
-  ocipher      ci0(clk, ce | (dir & (countval == cycles-1'b1)), done2, dir, roundKey, message, translated);
-
   parameter logic [3:0] cycles = (K == 128)? 4'b1011 : (K == 192)? 4'b1101 : 4'b1111;
 
+  // ocipher      ci0(clk, ce | (dir & (countval == cycles-1'b1)), done2, dir, roundKey, message, translated);
+
   assign done1 = (countval >= cycles);
-  assign done2 = (dir)? (countval == 2*cycles) : done1;
+  // assign done2 = (dir)? (countval == 2*cycles) : done1;
+  assign done2 = done1;
 
 endmodule
