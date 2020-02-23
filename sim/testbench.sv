@@ -6,7 +6,7 @@
 module testbench();
 
   // number of key bits
-  parameter K = 256;
+  parameter K = 128;
 
   logic clk, reset, load, done, sck, sdi, sdo;
   logic [K-1:0] key;
@@ -22,14 +22,14 @@ module testbench();
     if (K == 128) begin
 
       // Test case from FIPS-197 Appendix A.1, B
-      // key       <= 128'h2B7E151628AED2A6ABF7158809CF4F3C;
-      // plaintext <= 128'h3243F6A8885A308D313198A2E0370734;
-      // expected  <= 128'h3925841D02DC09FBDC118597196A0B32;
+      key       <= 128'h2B7E151628AED2A6ABF7158809CF4F3C;
+      plaintext <= 128'h3243F6A8885A308D313198A2E0370734;
+      expected  <= 128'h3925841D02DC09FBDC118597196A0B32;
 
       // Alternate test case from Appendix C.1
-      key       <= 128'h000102030405060708090A0B0C0D0E0F;
-      plaintext <= 128'h00112233445566778899AABBCCDDEEFF;
-      expected  <= 128'h69C4E0D86A7B0430D8CDB78070B4C55A;
+      // key       <= 128'h000102030405060708090A0B0C0D0E0F;
+      // plaintext <= 128'h00112233445566778899AABBCCDDEEFF;
+      // expected  <= 128'h69C4E0D86A7B0430D8CDB78070B4C55A;
 
     end else if (K == 192) begin
 

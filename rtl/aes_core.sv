@@ -50,6 +50,7 @@ module aes_core #(parameter K = 128)
   logic [3:0]   countval, cycles;
   logic         slwclk;
 
+
   // generate 5 MHz clock for cycles
   // clk_gen #(5 * (10**6)) sck(clk, reset, 1'b1, slwclk);
 

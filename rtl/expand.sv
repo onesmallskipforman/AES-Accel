@@ -43,23 +43,32 @@ module expand #(parameter K = 128)
   logic [31:0]  rcon, nextrcon, transform, rotTemp, subTemp, rconTemp, subTransform, subOrgTemp;
   logic [K-1:0] block, temp, nextBlock;
   logic [7:0]   rconFront, invrconFront;
+  logic wasdone;
 
-  typedef enum logic [1:0] {S0, S1, S2, S3} statetype;
+  typedef enum logic [2:0] {S0, S1, S2, S3} statetype;
   statetype state, nextstate;
-
-  typedef enum logic {FWD, BWD} dirstatetype;
-  dirstatetype dirstate, nextdirstate;
 
   always_ff @(posedge clk)
     if (reset) begin
       state       <= S0;
       block       <= 32'b0;
       rcon        <= 32'h8d000000;
-    end else if (!done) begin
+      wasdone     <= 1'b0;
+    end else begin//if (!done) begin
       state       <= nextstate;
       block       <= nextBlock;
       rcon        <= nextrcon;
+      wasdone     <= done;  
     end
+
+  parameter NR = (K == 128)? 10 : (K == 192)? 12 : 14;
+  parameter WIDTH = NR*128;
+  logic [WIDTH-1:0] bigroundkey;
+
+  always_ff @(posedge clk)
+    if      (reset)    bigroundkey <= {WIDTH{1'b0}};
+    else if (!wasdone) bigroundkey <= {roundKey, bigroundkey[WIDTH-1:128]};
+    else               bigroundkey <= {bigroundkey[(NR-1)*128:0], roundKey};
 
   // next state logic
   always_comb
@@ -109,12 +118,12 @@ module expand #(parameter K = 128)
 
   // output logic
   always_comb
-    case(state)
+    if (done) roundKey = bigroundkey[WIDTH-1:(NR-1)*128];
+    else case(state)
       S0: roundKey = 32'b0;
       S1: roundKey = block[K-1: K-128];
       S2: roundKey = block[127:0];
       S3: roundKey = {block[63:0], temp[K-1: K-64]};
       default: roundKey = 32'b0;
     endcase
-
 endmodule
