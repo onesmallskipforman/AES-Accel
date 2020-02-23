@@ -94,10 +94,13 @@ module expand128 (input  logic          clk, reset,
   assign rconTemp = subTemp ^ nextrcon;
 
   always_comb begin
-    temp[127:96] =            block[127:96] ^ rconTemp;
-    temp[95:64]  = (!done1)? (block[95:64]  ^ temp[127:96]) : (block[95:64] ^ block[127:96]);
-    temp[63:32]  = (!done1)? (block[63:32]  ^ temp[95:64])  : (block[63:32] ^ block[95:64]);
-    temp[31:0]   = (!done1)? (block[31:0]   ^ temp[63:32])  : (block[31:0]  ^ block[63:32]);
+    temp[127:96] = block[127:96] ^ rconTemp;
+    if (done1) begin temp[95:0] = block[95:0] ^ block[127:32]; end
+    else begin
+      temp[95:64]  = (block[95:64]  ^ temp[127:96]);
+      temp[63:32]  = (block[63:32]  ^ temp[95:64]);
+      temp[31:0]   = (block[31:0]   ^ temp[63:32]);
+    end
   end
 
   // next expansion block and output logic
@@ -163,8 +166,6 @@ module expand256 (input  logic          clk, reset,
   assign tosub = (state == S0)? rotTemp : transform;
   subword sw(tosub, subTemp);
   assign rconTemp = subTemp ^ nextrcon;
-  assign temp[127:96] = (state == S0)? (block[K-1:K-32]^rconTemp) : (block[127:96]^subTemp);
-
   assign replace = (state == S0)? block[255:128] : block[127:0];
 
   always_comb begin
@@ -175,8 +176,8 @@ module expand256 (input  logic          clk, reset,
   end
 
   // next expansion block and output logic
-  assign nextBlock = (state == S0)? {temp, block[127:0]} : {block[K-1:0], temp};
-  assign roundKey  = (state == S0)? block[K-1: K-128]    : block[127:0];
+  assign nextBlock = (state == S0)? {temp, block[127:0]} : {block[255:128], temp};
+  assign roundKey  = (state == S0)?  block[255: 128]     :  block[127:0];
 
 endmodule
 
@@ -241,8 +242,8 @@ module expand192 (input  logic          clk, reset,
   assign rconTemp = subTemp^nextrcon;
 
   always_comb
-    if      (state == S0) replace = block[192:64];
-    else if (state == S1) replace = {block[63:0], block[192:128]};
+    if      (state == S0) replace =  block[191:64];
+    else if (state == S1) replace = {block[63:0], block[191:128]};
     else                  replace = block[127:0];
 
   always_comb begin

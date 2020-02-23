@@ -62,7 +62,7 @@ module invaes_core #(parameter K)
   counter  #(5) ct0(clk, spi_done, !done1, 1'b1, countval);
 
   // send key a 4-word key schedule to cipher each cycle
-  expandop #(K) ex0(clk, spi_done, done1, done2, key, roundKey);
+  expand #(K) ex0(clk, spi_done, done1, done2, key, roundKey);
   invcipher     in0(clk, spi_done | (countval == cycles-1'b1), done2, roundKey, cyphertext, plaintext);
 
   generate

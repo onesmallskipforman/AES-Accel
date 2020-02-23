@@ -29,7 +29,7 @@
     cyphertext[127:0]: encrypted 128-bit message
 */
 
-module invaes #(parameter K = 127)
+module invaes #(parameter K = 128)
                (input  logic clk, reset,
                 input  logic r_sclk,
                 input  logic r_mosi,
@@ -48,9 +48,10 @@ module invaes #(parameter K = 127)
   logic [K-1:0] key;
   logic [127:0] plaintext, cyphertext;
   logic [7:0]   dirByte;
+  logic         spi_done;
 
-  // invaes_spi  #(K) spi(r_sclk, r_mosi, done, plaintext, r_miso, key, cyphertext);
-  spi_slave   #(K) rspi(clk, r_sclk, r_ce, r_mosi, plaintext, r_mosi, {cyphertext, key}, spi_done);
-  invaes_core #(K) core(clk, spi_done, key, cyphertext, done, plaintext);
+  invaes_spi  #(K) spi(r_sclk, r_mosi, done, plaintext, r_miso, key, cyphertext);
+  //spi_slave   #(K) rspi(clk, r_sclk, r_ce, r_mosi, plaintext, r_miso, {cyphertext, key}, spi_done);
+  invaes_core #(K) core(clk, !r_ce, key, cyphertext, done, plaintext);
 
 endmodule

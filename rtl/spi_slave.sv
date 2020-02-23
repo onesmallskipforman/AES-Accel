@@ -42,7 +42,7 @@ module spi_slave #(parameter N)
                    output logic         spi_done);
 
   logic         miso_delayed, was_ce, nce_i;
-  logic [N-1:0] shift_miso;
+  logic [N-1:0] shift_miso, full_mosi_a, full_mosi_i;
 
   // synchronizers for spi completion and mosi
   always_ff @(posedge clk) begin
@@ -52,19 +52,15 @@ module spi_slave #(parameter N)
     full_mosi   <= full_mosi_i;
   end
 
-  // asynchronous was_ce reset for start of spi
-  always_ff @(posedge ce)
-    was_ce <= 1'b0;
-
   // assert load
   always_ff @(posedge sclk)
-    if (!was_ce) {shift_miso, full_mosi_i, key} = {full_miso, full_mosi_i[N-2:0], mosi};
-    else         {shift_miso, full_mosi_i, key} = {shift_miso[N-2:0], full_mosi_i, mosi};
+    if (!was_ce) {shift_miso, full_mosi_a} = {full_miso, full_mosi_a[N-2:0], mosi};
+    else         {shift_miso, full_mosi_a} = {shift_miso[N-2:0], full_mosi_a, mosi};
 
   // miso should change on the negative edge of sclk
-  always_ff @(negedge sclk) begin
-    was_ce = ce;
-    miso_delayed = shift_miso[N-2];
+  always_ff @(negedge sclk, posedge ce) begin
+    was_ce <= ce;
+    miso_delayed <= shift_miso[N-2];
   end
 
   // when done is first asserted, shift out msb before clock edge
