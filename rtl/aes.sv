@@ -29,7 +29,7 @@
     translated[K-1:0]: encrypted K-bit message
 */
 
-module aes #(parameter K = 128)
+module aes #(parameter K = 256)
             (input  logic clk, reset,
              input  logic r_sclk,
              input  logic r_mosi,
@@ -50,7 +50,11 @@ module aes #(parameter K = 128)
   logic [7:0] dirByte;
 
 
-  aes_spi  #(K) spi(r_sclk, r_mosi, done, translated, r_miso, key, message, dirByte);
-  aes_core #(K) core(clk, reset, r_ce, key, message, dirByte[0], done, translated);
+  // aes_spi  #(K) spi(r_sclk, r_mosi, done, translated, r_miso, key, message, dirByte);
+  // aes_core #(K) core(clk, reset, r_ce, key, message, dirByte[0], done, translated);
+
+  aes_spi  #(K) spi(r_sclk, r_mosi, done, translated, r_miso, key, message);
+  aes_core #(K) core(clk, reset, r_ce, key, message, done, translated);
+
 
 endmodule

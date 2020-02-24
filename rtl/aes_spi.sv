@@ -38,8 +38,8 @@ module aes_spi #(parameter K = 128)
                  input  logic [127:0] translated,
                  output logic         miso,
                  output logic [K-1:0] key,
-                 output logic [127:0] message,
-                 output logic [7:0]   dirByte);
+                 output logic [127:0] message);
+                 // output logic [7:0]   dirByte);
  
   logic         miso_delayed, wasdone;
   logic [127:0] translatedcaptured;
@@ -49,8 +49,10 @@ module aes_spi #(parameter K = 128)
   // then deassert load, wait until done
   // then apply 128 sclks to shift out translated, starting with translated[0]
   always_ff @(posedge sclk)
-      if (!wasdone)  {translatedcaptured, message, key, dirByte} = {translated, message[126:0], key, dirByte, mosi};
-      else           {translatedcaptured, message, key, dirByte} = {translatedcaptured[126:0], message, key, dirByte, mosi};
+      if (!wasdone)  {translatedcaptured, message, key} = {translated, message[126:0], key, mosi};
+      else           {translatedcaptured, message, key} = {translatedcaptured[126:0], message, key, mosi};    
+      // if (!wasdone)  {translatedcaptured, message, key, dirByte} = {translated, message[126:0], key, dirByte, mosi};
+      // else           {translatedcaptured, message, key, dirByte} = {translatedcaptured[126:0], message, key, dirByte, mosi};
 
   // miso should change on the negative edge of sclk
   always_ff @(negedge sclk) begin

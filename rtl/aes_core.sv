@@ -50,6 +50,7 @@ module aes_core #(parameter K = 128)
   logic [127:0] roundKey; //, encrypted, decrypted;
   logic [4:0]   countval;
   logic         slwclk, done1;
+  logic predone;
 
 
   // generate 5 MHz clock for cycles
@@ -59,17 +60,20 @@ module aes_core #(parameter K = 128)
   counter #(5) cnt(clk, ce, !done2, 1'b1, countval);
 
   // send key a 4-word key schedule to cipher each cycle
-  expand  #(K) ke0(clk, ce, done1, key, roundKey);
-  cipher       ci0(clk, ce, done1, roundKey, message, translated);
-  // invcipher    in0(clk, ce | (countval <= cycles-1'b1), done2, roundKey, message, decrypted);
+  expand  #(K) ke0(clk, ce, done1, done2, predone, key, roundKey);
+  // cipher       ci0(clk, ce, done1, roundKey, message, translated);
   // assign translated = (dir)? decrypted : encrypted;
 
-  parameter logic [3:0] cycles = (K == 128)? 4'b1011 : (K == 192)? 4'b1101 : 4'b1111;
+  parameter logic [3:0] cycles = (K == 128)? 5'b1011 : (K == 192)? 5'b1101 : 5'b1111;
 
   // ocipher      ci0(clk, ce | (dir & (countval == cycles-1'b1)), done2, dir, roundKey, message, translated);
+  invcipher    in0(clk, ce | (countval == cycles-1'b1), done2, roundKey, message, translated);
 
-  assign done1 = (countval >= cycles);
+
+  assign done1 = (countval >= cycles - 1'b1);
   // assign done2 = (dir)? (countval == 2*cycles) : done1;
-  assign done2 = done1;
+  // assign done2 = done1;
+  assign done2 = (countval == 2*(cycles - 1'b1));
+  assign predone = (countval == cycles - 2'b10);
 
 endmodule
