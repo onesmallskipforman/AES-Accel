@@ -836,7 +836,6 @@ void digitalWrites(int pins[], int numPins, int val) {
 
 int digitalReads(int pins[], int numPins) {
     int i, val = digitalRead(pins[0]);
-
     for(i=1; i<numPins; i++) {
         val |= (digitalRead(pins[i]) << i);
     }
@@ -899,7 +898,6 @@ short spiSendReceive16(short send) {
 
 void uartInit(int baud) {
     uint fb = 12000000/baud; // 3 MHz UART clock
-
     pinMode(14, ALT0);
     pinMode(15, ALT0);
     UART_IBRD = fb >> 6;       // 6 Fract, 16 Int bits of BRD
