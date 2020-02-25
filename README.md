@@ -1,6 +1,6 @@
 # AES-Accel
 
-AES-Accel is SystemVerilog hardware accelerator code to perform the AES Encryption algorithm. Supports 128-, 192-, and 256- bit encryption. For further detail about the algorithm, please see `doc/`.
+AES-Accel is SystemVerilog hardware accelerator code to perform the AES Encryption and Decryption algorithms. Supports 128-, 192-, and 256- bit encryption and decryption. For further detail about the algorithm, please see `doc/`.
 
 ## Purpose
 
@@ -15,10 +15,6 @@ Several tests were in simulation, using `sim/testbench.sv` in modelsim, as well 
 Part of this project involves reading a textfile at compile time using the `$readmemh` call. Depending on where you place project files for synthesis and simulation, you may have to change the listed path of that textfile in that call.
 
 ## Related Work
-
-### AES Decryption
-
-There's no point to encryption if you're never going to decrypt! The systemverilog code for AES Decryption on a hardware accelerator can be found in my other repo, [InvAES-Accel](https://github.com/onesmallskipforman/InvAES-Accel).
 
 ### ToolBox
 
