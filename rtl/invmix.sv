@@ -70,6 +70,3 @@ module invmixcolumn(input  logic [31:0] a,
 
   assign y = {y0, y1, y2, y3};
 endmodule
-
-
-

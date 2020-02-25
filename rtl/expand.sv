@@ -49,7 +49,7 @@ module expand #(parameter K = 128, INV = 0)
       if (K == 192) expand192 e192(clk, reset, done1, key, roundKey);
       if (K == 256) expand256 e256(clk, reset, done1, key, roundKey);
     end else begin
-      if (K == 128) iexpand128 ie128(clk, reset, done1, done2, key, roundKey);         
+      if (K == 128) iexpand128 ie128(clk, reset, done1, done2, key, roundKey);
       if (K == 192) iexpand192 ie192(clk, reset, done1, done2, predone, key, roundKey);
       if (K == 256) iexpand256 ie256(clk, reset, done1, done2, predone, key, roundKey);
     end
@@ -67,7 +67,7 @@ module expand #(parameter K = 128, INV = 0)
   //   // else          bigroundkey <= {bigroundkey[(NR-1)*128 - 1 : 0], bigroundkey[WIDTH-1:(NR-1)*128]};
   //   // else          bigroundkey <= {bigroundkey[128: 0], bigroundkey[WIDTH-1:128]};
   // end
-  
+
   // assign outroundKey = (!wasdone)? roundKey : bigroundkey[WIDTH-1:(NR-1)*128];
   assign outroundKey = roundKey;
 endmodule
@@ -93,7 +93,7 @@ module expand128 (input  logic          clk, reset,
       rcon  <= 32'h8d000000;
     end else if (!done) begin
       block <= nextBlock;
-      rcon  <= nextrcon;  
+      rcon  <= nextrcon;
     end
   end
 
@@ -153,7 +153,7 @@ module expand192 (input  logic          clk, reset,
   galoismult    gm(rcon[31:24], rconFront);
   invgaloismult ig(rcon[31:24], invrconFront);
   assign nextrcon  = (state == S2)? rcon        : {rconFront, 24'b0};
-  
+
   assign transform = (state == S0)? block[31:0] : temp[95:64];
   rotate #(1, 4, 8) rw(transform, rotTemp);
   subword sw(rotTemp, subTemp);
@@ -478,7 +478,7 @@ endmodule
 //       state       <= nextstate;
 //       block       <= nextBlock;
 //       rcon        <= nextrcon;
-//       wasdone     <= done;  
+//       wasdone     <= done;
 //     end
 
 //   parameter NR = (K == 128)? 10 : (K == 192)? 12 : 14;

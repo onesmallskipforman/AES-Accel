@@ -49,7 +49,7 @@ module aes_core #(parameter K = 128, INV = 1)
 
   parameter logic [3:0] cycles = (K == 128)? 4'b1011 : (K == 192)? 4'b1101 : 4'b1111;
   parameter countsize = (INV == 0)? 4 : 5;
-  
+
   logic [127:0]         roundKey;
   logic [countsize-1:0] countval;
   logic                 slwclk, done1, predone;

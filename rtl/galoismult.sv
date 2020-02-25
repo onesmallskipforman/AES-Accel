@@ -35,7 +35,7 @@ module galoismult #(parameter N = 1)
     assign powers[0 +: 8] = a;
     for (i = 1; i < N+1; i++) begin : galois
       assign ashift[(i-1)*8 +: 8] = (powers[(i-1)*8 +: 8] << 1);
-      assign powers[i*8 +: 8] = (powers[i*8-1])? 
+      assign powers[i*8 +: 8] = (powers[i*8-1])?
     (ashift[(i-1)*8 +: 8] ^ 8'b00011011) : ashift[(i-1)*8 +: 8];
     end
 

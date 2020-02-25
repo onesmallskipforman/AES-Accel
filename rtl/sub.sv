@@ -68,5 +68,3 @@ module sbox(input  logic [7:0] a,
   assign y = sbox[a];
 
 endmodule
-
-

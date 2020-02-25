@@ -5,8 +5,8 @@
  *						Sarah_Lichtman@hmc.edu & Joshua_Vasquez@hmc.edu
  *                      15 August 2014
  *                      David_Harris@hmc.edu  (simplify pinMode)
- *						
- *	Library to simplify memory access on Raspberry Pi (Broadcom BCM2835). 
+ *
+ *	Library to simplify memory access on Raspberry Pi (Broadcom BCM2835).
  *	Must be run with root permissions using sudo.
 */
 
@@ -60,7 +60,7 @@
 #define SPI0_BASE			    (BCM2835_PERI_BASE + 0x204000)
 #define PWM_BASE			    (BCM2835_PERI_BASE + 0x20c000)
 
-#define SYS_TIMER_BASE 		    (BCM2835_PERI_BASE + 0x3000) 
+#define SYS_TIMER_BASE 		    (BCM2835_PERI_BASE + 0x3000)
 #define ARM_TIMER_BASE 		    (BCM2835_PERI_BASE + 0xB000)
 
 #define CM_PWM_BASE             (BCM2835_PERI_BASE + 0x101000)
@@ -98,7 +98,7 @@ typedef struct
     unsigned FSEL9      : 3;
     unsigned            : 2;
 }gpfsel0bits;
-#define GPFSEL0bits (*(volatile gpfsel0bits*) (gpio + 0))   
+#define GPFSEL0bits (*(volatile gpfsel0bits*) (gpio + 0))
 #define GPFSEL0 (*(volatile unsigned int*) (gpio + 0))
 
 typedef struct
@@ -115,7 +115,7 @@ typedef struct
     unsigned FSEL19      : 3;
     unsigned             : 2;
 }gpfsel1bits;
-#define GPFSEL1bits (*(volatile gpfsel1bits*) (gpio + 1))   
+#define GPFSEL1bits (*(volatile gpfsel1bits*) (gpio + 1))
 #define GPFSEL1 (*(volatile unsigned int*) (gpio + 1))
 
 typedef struct
@@ -132,8 +132,8 @@ typedef struct
     unsigned FSEL29      : 3;
     unsigned             : 2;
 }gpfsel2bits;
-#define GPFSEL2bits (* (volatile gpfsel2bits*) (gpio + 2))   
-#define GPFSEL2 (* (volatile unsigned int *) (gpio + 2))                        
+#define GPFSEL2bits (* (volatile gpfsel2bits*) (gpio + 2))
+#define GPFSEL2 (* (volatile unsigned int *) (gpio + 2))
 
 typedef struct
 {
@@ -149,8 +149,8 @@ typedef struct
     unsigned FSEL39      : 3;
     unsigned             : 2;
 }gpfsel3bits;
-#define GPFSEL3bits (* (volatile gpfsel3bits*) (gpio + 3))   
-#define GPFSEL3 (* (volatile unsigned int *) (gpio + 3))                        
+#define GPFSEL3bits (* (volatile gpfsel3bits*) (gpio + 3))
+#define GPFSEL3 (* (volatile unsigned int *) (gpio + 3))
 
 
 typedef struct
@@ -167,8 +167,8 @@ typedef struct
     unsigned FSEL49      : 3;
     unsigned             : 2;
 }gpfsel4bits;
-#define GPFSEL4bits (* (volatile gpfsel4bits*) (gpio + 4))   
-#define GPFSEL4 (* (volatile unsigned int *) (gpio + 4))                        
+#define GPFSEL4bits (* (volatile gpfsel4bits*) (gpio + 4))
+#define GPFSEL4 (* (volatile unsigned int *) (gpio + 4))
 
 typedef struct
 {
@@ -178,8 +178,8 @@ typedef struct
     unsigned FSEL53      : 3;
     unsigned             : 20;
 }gpfsel5bits;
-#define GPFSEL5bits (* (volatile gpfsel5bits*) (gpio + 5))   
-#define GPFSEL5 (* (volatile unsigned int *) (gpio + 5))                        
+#define GPFSEL5bits (* (volatile gpfsel5bits*) (gpio + 5))
+#define GPFSEL5 (* (volatile unsigned int *) (gpio + 5))
 
 // Pin Output Select
 #define GPSET    ((volatile unsigned int *) (gpio + 7))
@@ -218,8 +218,8 @@ typedef struct
     unsigned SET30      : 1;
     unsigned SET31      : 1;
 }gpset0bits;
-#define GPSET0bits (* (volatile gpset0bits*) (gpio + 7))   
-#define GPSET0 (* (volatile unsigned int *) (gpio + 7)) 
+#define GPSET0bits (* (volatile gpset0bits*) (gpio + 7))
+#define GPSET0 (* (volatile unsigned int *) (gpio + 7))
 
 typedef struct
 {
@@ -247,8 +247,8 @@ typedef struct
     unsigned SET53       : 1;
     unsigned             : 10;
 }gpset1bits;
-#define GPSET1bits (* (volatile gpset1bits*) (gpio + 8))   
-#define GPSET1 (* (volatile unsigned int *) (gpio + 8)) 
+#define GPSET1bits (* (volatile gpset1bits*) (gpio + 8))
+#define GPSET1 (* (volatile unsigned int *) (gpio + 8))
 
 // Pin Output Clear
 #define GPCLR    ((volatile unsigned int *) (gpio + 10))
@@ -287,8 +287,8 @@ typedef struct
     unsigned CLR30      : 1;
     unsigned CLR31      : 1;
 }gpclr0bits;
-#define GPCLR0bits (* (volatile gpclr0bits*) (gpio + 10))   
-#define GPCLR0 (* (volatile unsigned int *) (gpio + 10)) 
+#define GPCLR0bits (* (volatile gpclr0bits*) (gpio + 10))
+#define GPCLR0 (* (volatile unsigned int *) (gpio + 10))
 
 typedef struct
 {
@@ -316,8 +316,8 @@ typedef struct
     unsigned CLR53       : 1;
     unsigned             : 10;
 }gpclr1bits;
-#define GPCLR1bits (* (volatile gpclr1bits*) (gpio + 11))   
-#define GPCLR1 (* (volatile unsigned int *) (gpio + 11)) 
+#define GPCLR1bits (* (volatile gpclr1bits*) (gpio + 11))
+#define GPCLR1 (* (volatile unsigned int *) (gpio + 11))
 
 // Pin Level
 #define GPLEV    ((volatile unsigned int *) (gpio + 13))
@@ -356,8 +356,8 @@ typedef struct
     unsigned LEV30      : 1;
     unsigned LEV31      : 1;
 }gplev0bits;
-#define GPLEV0bits (* (volatile gplev0bits*) (gpio + 13))   
-#define GPLEV0 (* (volatile unsigned int *) (gpio + 13)) 
+#define GPLEV0bits (* (volatile gplev0bits*) (gpio + 13))
+#define GPLEV0 (* (volatile unsigned int *) (gpio + 13))
 
 
 typedef struct
@@ -386,8 +386,8 @@ typedef struct
     unsigned LEV53       : 1;
     unsigned             : 10;
 }gplev1bits;
-#define GPLEV1bits (* (volatile gplev1bits*) (gpio + 14))   
-#define GPLEV1 (* (volatile unsigned int *) (gpio + 14)) 
+#define GPLEV1bits (* (volatile gplev1bits*) (gpio + 14))
+#define GPLEV1 (* (volatile unsigned int *) (gpio + 14))
 
 /////////////////////////////////////////////////////////////////////
 // SPI Registers
@@ -421,7 +421,7 @@ typedef struct
 	unsigned LEN_LONG	:1;
 	unsigned 			:6;
 }spi0csbits;
-#define SPI0CSbits (* (volatile spi0csbits*) (spi + 0))   
+#define SPI0CSbits (* (volatile spi0csbits*) (spi + 0))
 #define SPI0CS (* (volatile unsigned int *) (spi + 0))
 
 #define SPI0FIFO (* (volatile unsigned int *) (spi + 1))
@@ -488,9 +488,9 @@ typedef struct
     unsigned PE         : 1;
     unsigned BE         : 1;
     unsigned OE         : 1;
-    unsigned            : 20;  
+    unsigned            : 20;
 } uart_drbits;
-#define UART_DRbits (* (volatile uart_drbits*) (uart + 0))   
+#define UART_DRbits (* (volatile uart_drbits*) (uart + 0))
 #define UART_DR (*(volatile unsigned int *) (uart + 0))
 
 typedef struct
@@ -506,7 +506,7 @@ typedef struct
     unsigned int RI         : 1;
     unsigned int            : 24;
 } uart_frbits;
-#define UART_FRbits (*(volatile uart_frbits*) (uart + 6))  
+#define UART_FRbits (*(volatile uart_frbits*) (uart + 6))
 #define UART_FR (*(volatile unsigned int *) (uart + 6))
 
 typedef struct
@@ -514,7 +514,7 @@ typedef struct
     unsigned int IBRD       : 16;
     unsigned int            : 16;
 } uart_ibrdbits;
-#define UART_IBRDbits   (*(volatile uart_ibrdbits*) (uart + 9))  
+#define UART_IBRDbits   (*(volatile uart_ibrdbits*) (uart + 9))
 #define UART_IBRD (*(volatile unsigned int *) (uart + 9))
 
 typedef struct
@@ -522,7 +522,7 @@ typedef struct
     unsigned int FBRD       : 6;
     unsigned int            : 26;
 } uart_fbrdbits;
-#define UART_FBRDbits    (*(volatile uart_fbrdbits*) (uart + 10)) 
+#define UART_FBRDbits    (*(volatile uart_fbrdbits*) (uart + 10))
 #define UART_FBRD (*(volatile unsigned int *) (uart + 10))
 
 typedef struct
@@ -536,7 +536,7 @@ typedef struct
     unsigned int SPS        : 1;
     unsigned int            : 24;
 } uart_lcrhbits;
-#define UART_LCRHbits (* (volatile uart_lcrhbits*) (uart + 11)) 
+#define UART_LCRHbits (* (volatile uart_lcrhbits*) (uart + 11))
 #define UART_LCRH (*(volatile unsigned int *) (uart + 11))
 
 typedef struct
@@ -634,7 +634,7 @@ typedef struct
     unsigned PASSWD     :8;
 } cm_pwmdivbits;
 #define CM_PWMDIVbits (* (volatile cm_pwmdivbits *) (cm_pwm + 41))
-#define CM_PWMDIV (*(volatile unsigned int *)(cm_pwm + 41)) 
+#define CM_PWMDIV (*(volatile unsigned int *)(cm_pwm + 41))
 
 /////////////////////////////////////////////////////////////////////
 // General Functions
@@ -781,7 +781,7 @@ void noInterrupts(void) {
     //disable interrupts
     IRQ_DISABLE1 = irq1;
     IRQ_DISABLE2 = irq2;
-    IRQ_DISABLE_BASIC = irqbasic; 
+    IRQ_DISABLE_BASIC = irqbasic;
 }
 
 void interrupts(void) {
@@ -836,7 +836,7 @@ void digitalWrites(int pins[], int numPins, int val) {
 
 int digitalReads(int pins[], int numPins) {
     int i, val = digitalRead(pins[0]);
-    
+
     for(i=1; i<numPins; i++) {
         val |= (digitalRead(pins[i]) << i);
     }
@@ -874,7 +874,7 @@ void spiInit(int freq, int settings) {
 
     //Note: clock divisor will be rounded to the nearest power of 2
     SPI0CLK = 250000000/freq;   // set SPI clock to 250MHz / freq
-    SPI0CS = settings;          
+    SPI0CS = settings;
     SPI0CSbits.TA = 1;          // turn SPI on with the "transfer active" bit
 }
 
@@ -899,7 +899,7 @@ short spiSendReceive16(short send) {
 
 void uartInit(int baud) {
     uint fb = 12000000/baud; // 3 MHz UART clock
-    
+
     pinMode(14, ALT0);
     pinMode(15, ALT0);
     UART_IBRD = fb >> 6;       // 6 Fract, 16 Int bits of BRD
@@ -939,13 +939,13 @@ void pwmInit() {
     CM_PWMCTL = PWM_CLK_PASSWORD|0x206; // Src = unfiltered 500 MHz CLKD
     CM_PWMDIV = PWM_CLK_PASSWORD|(PLL_CLOCK_DIVISOR << 12); // PWM Freq = 25 MHz
     CM_PWMCTL = CM_PWMCTL|PWM_CLK_PASSWORD|0x10;    // Enable PWM clock
-    while (!CM_PWMCTLbits.BUSY);    // Wait for generator to start    
+    while (!CM_PWMCTLbits.BUSY);    // Wait for generator to start
     PWM_CTLbits.MSEN1 = 1;  // Channel 1 in mark/space mode
     PWM_CTLbits.PWEN1 = 1;  // Enable pwm
 }
 
 /**
- * dut is a value between 0 and 1 
+ * dut is a value between 0 and 1
  * freq is pwm frequency in Hz
  */
 void setPWM(float freq, float dut) {

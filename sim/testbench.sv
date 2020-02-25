@@ -60,7 +60,7 @@ module testbench();
         expected <= 128'h00112233445566778899aabbccddeeff;
         key  <= 256'h000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f;
         // key <= 256'h603deb1015ca71be2b73aef0857d77811f352c073b6108d72d9810a30914dff4;
-    end      
+    end
   end
 
   // generate clock and load signals
@@ -101,4 +101,3 @@ module testbench();
   end
 
 endmodule
-

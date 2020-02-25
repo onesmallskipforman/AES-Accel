@@ -158,5 +158,3 @@ void print16(char *text) {
   }
   printf("\n");
 }
-
-

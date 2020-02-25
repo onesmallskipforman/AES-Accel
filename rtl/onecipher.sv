@@ -62,13 +62,13 @@ module ocipher (input  logic         clk,
   shiftrows   sr1(toshift, shifted);
   assign hStm = (dir)? {shifted[31:0], shifted[63:32], shifted[95:64], shifted[127:96]} : shifted;
 
-  assign tomix = (dir)? (hStm^roundKey) : hStm; 
+  assign tomix = (dir)? (hStm^roundKey) : hStm;
   omixcolumns  mx1(dir, tomix, mStm);
 
   // next cipher state logic
   always_comb
     // if      (state == S0) nextStm = in^roundKey;                   // cycle 1
-    // else 
+    // else
     if (!done) nextStm = (dir)? mStm : (mStm^roundKey); // cycles 2-10
     else       nextStm = hStm^roundKey;                 // cycle 11
 

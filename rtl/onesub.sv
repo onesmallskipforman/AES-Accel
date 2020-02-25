@@ -16,7 +16,7 @@
     y[127:0]: 128-bit byte-substituted state matrix
 */
 
-module osubbytes(input logic dir, 
+module osubbytes(input logic dir,
                   input  logic [127:0] a,
                 output logic [127:0] y);
 
@@ -38,7 +38,7 @@ endmodule
     subbed[31:0]: 32-bit byte-substituted word
 */
 
-module osubword (input logic dir, 
+module osubword (input logic dir,
                 input  logic [31:0] word,
                 output logic [31:0] subbed);
 
@@ -50,10 +50,10 @@ module osubword (input logic dir,
 endmodule
 
 
-module osbyte (input logic dir, 
+module osbyte (input logic dir,
               input logic [7:0] a,
               output logic [7:0] y);
-  
+
   logic [7:0] b, invaff, aff, index, tbl;
   parameter logic [7:0] c = 8'h63;
   parameter logic [7:0] invc = 8'h05;

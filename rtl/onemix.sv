@@ -42,7 +42,7 @@ endmodule
 */
 
 
-module omixcolumn(input logic dir, 
+module omixcolumn(input logic dir,
                     input  logic [31:0] a,
                   output logic [31:0] y);
 
