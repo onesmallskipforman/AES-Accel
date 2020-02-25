@@ -7,29 +7,30 @@ module testbench();
 
   // number of key bits
   parameter K = 256;
+  parameter logic [7:0] dirByte = 8'b1;
 
   logic clk, reset, load, done, sck, sdi, sdo;
   logic [K-1:0] key;
   logic [127:0] plaintext, cyphertext, expected;
   logic [K+128+8-1:0] comb;
   logic [9:0] i;
-  
+
   // device under test
   invaes #(K) dut(clk, reset, sck, sdi, load, sdo, done);
 
   // test case
   initial begin
-    if (K == 128) begin         
+    if (K == 128) begin
       // Test case from FIPS-197 Appendix A.1, B
       cyphertext <= 128'h3925841D02DC09FBDC118597196A0B32;
       expected   <= 128'h3243F6A8885A308D313198A2E0370734;
       key        <= 128'h2B7E151628AED2A6ABF7158809CF4F3C;
-    end else if (K == 192) begin 
+    end else if (K == 192) begin
       // 192-bit test case from Appendix C.2
       cyphertext <= 128'hdda97ca4864cdfe06eaf70a0ec0d7191;
       expected   <= 128'h00112233445566778899aabbccddeeff;
       key        <= 192'h000102030405060708090a0b0c0d0e0f1011121314151617;
-    end else begin               
+    end else begin
       // 256-bit test case from Appendix C.3
       cyphertext <= 128'h8ea2b7ca516745bfeafc49904b496089;
       expected   <= 128'h00112233445566778899aabbccddeeff;
