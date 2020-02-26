@@ -41,9 +41,8 @@ endmodule
     y[127:0]: transformed column
 */
 
-
 module omixcolumn(input logic dir,
-                    input  logic [31:0] a,
+                  input  logic [31:0] a,
                   output logic [31:0] y);
 
   logic [7:0] a123x3, a0x1, a1x1, a2x1, a3x1, a0x2, a1x2, a2x2, a3x2, a0, a1, a2, a3;

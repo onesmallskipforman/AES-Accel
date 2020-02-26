@@ -35,10 +35,13 @@ module invcipher (input  logic         clk,
                   output logic [127:0] out);
 
   logic [127:0] nextStm, stm, ibStm, ihStm, imStm, rStm;
+  logic wasdone;
 
-  always_ff @(posedge clk)
-    if      (reset) stm <= in^roundKey;
-    else if (!done) stm <= nextStm;
+  always_ff @(posedge clk) begin
+    wasdone <= done;
+    if (reset) stm <= in^roundKey;
+    else       stm <= nextStm;
+  end
 
   // inverse cipher state transformation logic
   invshiftrows   isr1(stm, ihStm);
@@ -48,8 +51,9 @@ module invcipher (input  logic         clk,
 
   // next inverse cipher state logic
   always_comb
-    if (!done) nextStm = imStm; // cycles 2-10
-    else       nextStm = rStm;  // cycle 11
+    if      (!done)    nextStm = imStm; // cycles 2-10
+    else if (!wasdone) nextStm = rStm;  // cycle 11
+    else               nextStm = stm;   // resting
 
   // output logic
   assign out = nextStm;

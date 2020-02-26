@@ -6,20 +6,23 @@
 module testbench();
 
   // number of key bits
-  parameter K = 192, INV = 1;
+  parameter K = 128, INV = 2;
 
-  logic clk, reset, load, done, sck, sdi, sdo;
+  logic clk, load, done, sck, sdi, sdo;
   logic [K-1:0] key;
   logic [127:0] plaintext, cyphertext, expected;
-  logic [K+128-1:0] comb;
+  logic [K+128+8-1:0] comb;
   logic [9:0] i;
+  logic [7:0] dirByte;
 
   // device under test
-  aes #(K, INV) dut(clk, reset, sck, sdi, load, sdo, done);
+  aes #(K, INV) dut(clk, sck, sdi, load, sdo, done);
+
+  assign dirByte = 8'h00;
 
   // test case
   initial begin
-    if (INV == 0)
+    if ( (INV == 0) | ((INV == 2) & (dirByte == 8'h00)) )
       if (K == 128) begin
         // Test case from FIPS-197 Appendix A.1, B
         key       <= 128'h2B7E151628AED2A6ABF7158809CF4F3C;
@@ -31,36 +34,36 @@ module testbench();
         // expected  <= 128'h69C4E0D86A7B0430D8CDB78070B4C55A;
       end else if (K == 192) begin
         // 192-bit test case from Appendix C.2
-        expected       <= 128'hdda97ca4864cdfe06eaf70a0ec0d7191;
+        expected  <= 128'hdda97ca4864cdfe06eaf70a0ec0d7191;
         plaintext <= 128'h00112233445566778899aabbccddeeff;
-        key  <= 192'h000102030405060708090a0b0c0d0e0f1011121314151617;
+        key       <= 192'h000102030405060708090a0b0c0d0e0f1011121314151617;
         // key <= 192'h8e73b0f7da0e6452c810f32b809079e562f8ead2522c6b7b;
       end else begin
         // 256-bit test case from Appendix C.3
-        expected       <= 128'h8ea2b7ca516745bfeafc49904b496089;
+        expected  <= 128'h8ea2b7ca516745bfeafc49904b496089;
         plaintext <= 128'h00112233445566778899aabbccddeeff;
-        key  <= 256'h000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f;
+        key       <= 256'h000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f;
         // key <= 256'h603deb1015ca71be2b73aef0857d77811f352c073b6108d72d9810a30914dff4;
       end
-    else
+    else if ( (INV == 1) | ((INV == 2) & (dirByte == 8'hFF)) )
       if (K == 128) begin
         // Test case from FIPS-197 Appendix A.1, B
         key       <= 128'h2B7E151628AED2A6ABF7158809CF4F3C;
-        expected <= 128'h3243F6A8885A308D313198A2E0370734;
-        plaintext  <= 128'h3925841D02DC09FBDC118597196A0B32;
+        expected  <= 128'h3243F6A8885A308D313198A2E0370734;
+        plaintext <= 128'h3925841D02DC09FBDC118597196A0B32;
       end else if (K == 192) begin
         // 192-bit test case from Appendix C.2
         plaintext <= 128'hdda97ca4864cdfe06eaf70a0ec0d7191;
-        expected <= 128'h00112233445566778899aabbccddeeff;
-        key  <= 192'h000102030405060708090a0b0c0d0e0f1011121314151617;
+        expected  <= 128'h00112233445566778899aabbccddeeff;
+        key       <= 192'h000102030405060708090a0b0c0d0e0f1011121314151617;
         // key <= 192'h8e73b0f7da0e6452c810f32b809079e562f8ead2522c6b7b;
       end else begin
         // 256-bit test case from Appendix C.3
-        plaintext       <= 128'h8ea2b7ca516745bfeafc49904b496089;
-        expected <= 128'h00112233445566778899aabbccddeeff;
-        key  <= 256'h000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f;
+        plaintext <= 128'h8ea2b7ca516745bfeafc49904b496089;
+        expected  <= 128'h00112233445566778899aabbccddeeff;
+        key       <= 256'h000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f;
         // key <= 256'h603deb1015ca71be2b73aef0857d77811f352c073b6108d72d9810a30914dff4;
-    end
+      end
   end
 
   // generate clock and load signals
@@ -71,13 +74,12 @@ module testbench();
     end
 
   initial begin
-    reset = 1'b1; #1; reset = 1'b0;
     i = 0;
     load = 1'b0; #10; load = 1'b1;
   end
 
-  assign comb = {plaintext, key};
-  parameter total = K + 128;
+  assign comb = {dirByte, plaintext, key};
+  parameter total = (INV != 2)? K + 128 : K + 128 + 8;
 
   // shift in test vectors, wait until done, and shift out result
   always @(posedge clk) begin
@@ -92,11 +94,11 @@ module testbench();
       #4; sck = 0;
       i = i + 1;
     end else if (i == total + 128) begin
-          if (cyphertext == expected)
-              $display("Testbench ran successfully");
-          else $display("Error: cyphertext = %h, expected %h",
-              cyphertext, expected);
-          $stop();
+      if (cyphertext == expected)
+        $display("Testbench ran successfully");
+      else 
+        $display("Error: cyphertext = %h, expected %h", cyphertext, expected);
+      $stop();
     end
   end
 

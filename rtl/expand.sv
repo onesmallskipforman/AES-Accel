@@ -104,6 +104,7 @@ module expand128 (input  logic          clk, reset,
   // next block logic
   rotate #(1, 4, 8) rw(block[31:0], rotTemp);
   subword           sw(rotTemp, subTemp);
+
   assign rconTemp = subTemp ^ nextrcon;
 
   always_comb begin
@@ -116,7 +117,7 @@ endmodule
 
 
 module expand192 (input  logic          clk, reset,
-                  input  logic          done1,
+                  input  logic          done,
                   input  logic [191:0]  key,
                   output logic [127:0]  roundKey);
 
@@ -133,7 +134,7 @@ module expand192 (input  logic          clk, reset,
       state    <= S0;
       block    <= key;
       rcon     <= 32'h8d000000;
-    end else if (!done1) begin
+    end else if (!done) begin
       state    <= nextstate;
       block    <= nextBlock;
       rcon     <= nextrcon;
@@ -270,6 +271,8 @@ module iexpand128 (input  logic          clk, reset,
   assign transform = (done1)? (block[31:0]^block[63:32]) : block[31:0];
   rotate #(1, 4, 8) rw(transform, rotTemp);
   subword sw(rotTemp, subTemp);
+  // osubword           sw(1'b0, rotTemp, subTemp);
+
   assign rconTemp = subTemp ^ nextrcon;
 
   always_comb begin
@@ -342,6 +345,7 @@ module iexpand192 (input  logic          clk, reset,
 
   rotate #(1, 4, 8) rw(transform, rotTemp);
   subword sw(rotTemp, subTemp);
+
   assign rconTemp = subTemp^nextrcon;
 
   assign replace = (!done1)? block[191:64] : block[127:0];
@@ -409,6 +413,7 @@ module iexpand256 (input  logic          clk, reset,
   rotate #(1, 4, 8) rw(block[31:0], rotTemp);
   assign tosub = (state == S0)? rotTemp : block[31:0];
   subword sw(tosub, subTemp);
+
   assign rconTemp = subTemp ^ nextrcon;
   assign replace = (state == S0)? block[255:128] : block[127:0];
 
@@ -427,123 +432,3 @@ module iexpand256 (input  logic          clk, reset,
   assign roundKey  = block[255: 128];
 
 endmodule
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// module expand #(parameter K = 128)
-//                (input  logic          clk, reset,
-//                 input  logic          done,
-//                 input  logic [K-1:0]  key,
-//                 output logic [127:0]  roundKey);
-
-//   logic [31:0]  rcon, nextrcon, transform, rotTemp, subTemp, rconTemp, subTransform, subOrgTemp;
-//   logic [K-1:0] block, temp, nextBlock;
-//   logic [7:0]   rconFront, invrconFront;
-//   logic wasdone;
-
-//   typedef enum logic [2:0] {S0, S1, S2, S3} statetype;
-//   statetype state, nextstate;
-
-//   always_ff @(posedge clk)
-//     if (reset) begin
-//       state       <= S0;
-//       block       <= 32'b0;
-//       rcon        <= 32'h8d000000;
-//       wasdone     <= 1'b0;
-//     end else begin//if (!done) begin
-//       state       <= nextstate;
-//       block       <= nextBlock;
-//       rcon        <= nextrcon;
-//       wasdone     <= done;
-//     end
-
-//   parameter NR = (K == 128)? 10 : (K == 192)? 12 : 14;
-//   parameter WIDTH = NR*128;
-//   logic [WIDTH-1:0] bigroundkey;
-
-//   always_ff @(posedge clk)
-//     if      (reset)    bigroundkey <= {WIDTH{1'b0}};
-//     else if (!wasdone) bigroundkey <= {roundKey, bigroundkey[WIDTH-1:128]};
-//     else               bigroundkey <= {bigroundkey[(NR-1)*128:0], roundKey};
-
-//   // next state logic
-//   always_comb
-//     case(state)
-//       S0:                     nextstate = S1;
-//       S1: if      (K == 128)  nextstate = S1;
-//           else if (K == 256)  nextstate = S2;
-//           else                nextstate = S3;
-//       S2:                     nextstate = S1;
-//       S3:                     nextstate = S2;
-//       default:                nextstate = S0;
-//     endcase
-
-//   // next round constant (rcon for current temp transform) logic
-//   galoismult    gm(rcon[31:24], rconFront);
-
-//   always_comb
-//     if ((state == S0) | ((state == S1) & (K != 128))) nextrcon = rcon;
-//     else                                              nextrcon = {rconFront, 24'b0};
-
-//   // temp block logic
-//   assign transform = block[31:0];
-//   rotate #(1, 4, 8) rw(transform, rotTemp);
-//   subword           sw(rotTemp, subTemp);
-//   assign rconTemp       = subTemp         ^ nextrcon;
-//   assign temp[K-1:K-32] = block[K-1:K-32] ^ rconTemp;
-
-//   genvar i;
-//   generate
-//     for (i = K-32; i > 0; i=i-32) begin: tempAssign
-//       // unique case for 256-bit expansion block
-//       if ( (K == 256) && (i == 128) ) begin
-//         assign subTransform = temp[i+32-1:i];
-//         subword so(subTransform, subOrgTemp);
-//         assign temp[i-1:i-32]  = block[i-1:i-32]^subOrgTemp;
-//       end else begin
-//         assign temp[i-1:i-32] = block[i-1:i-32]^temp[i+32-1:i];
-//       end
-//     end
-//   endgenerate
-
-//   // next expansion block logic
-//   always_comb
-//     if       (state == S0)               nextBlock = key;
-//     else if ((K != 128) & (state == S1)) nextBlock = block;
-//     else                                 nextBlock = temp;
-
-//   // output logic
-//   always_comb
-//     if (done) roundKey = bigroundkey[WIDTH-1:(NR-1)*128];
-//     else case(state)
-//       S0: roundKey = 32'b0;
-//       S1: roundKey = block[K-1: K-128];
-//       S2: roundKey = block[127:0];
-//       S3: roundKey = {block[63:0], temp[K-1: K-64]};
-//       default: roundKey = 32'b0;
-//     endcase
-// endmodule

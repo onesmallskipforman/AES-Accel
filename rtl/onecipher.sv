@@ -28,49 +28,49 @@
 */
 
 module ocipher (input  logic         clk,
-               input  logic         reset,
-               input  logic         done, dir,
-               input  logic [127:0] roundKey,
-               input  logic [127:0] in,
-               output logic [127:0] out);
+                input  logic         reset,
+                input  logic         done, dir,
+                input  logic [127:0] roundKey,
+                input  logic [127:0] in,
+                output logic [127:0] out);
 
   logic [127:0] nextStm, stm, bStm, hStm, mStm, toshift, shifted, tomix;
 
-  typedef enum logic {S0, S1} statetype;
+  typedef enum logic [1:0] {S0, S1, S2} statetype;
   statetype state, nextstate;
 
   always_ff @(posedge clk)
     if (reset) begin
-      state <= S0;
-      stm   <= in^roundKey;
-    end else if (!done) begin
+      state  <= (!dir)? S0 : S1;
+      stm    <= (!dir)? 0  : in ^ roundKey;
+    end else begin
       state <= nextstate;
       stm   <= nextStm;
     end
 
-  // next state logic
   always_comb
     case(state)
-      S0:      nextstate = S1;
-      S1:      nextstate = S1;
-      default: nextstate = S0;
+      S0:            nextstate = S1;
+      S1: if (done)  nextstate = S2;
+          else       nextstate = S1;
+      S2:            nextstate = S2;
+      default:       nextstate = S0;
     endcase
 
   // cipher state transformation logic
-  osubbytes   sb1(dir, stm, bStm);
-  assign toshift = (dir)? {bStm[31:0], bStm[63:32], bStm[95:64], bStm[127:96]} : bStm;
-  shiftrows   sr1(toshift, shifted);
-  assign hStm = (dir)? {shifted[31:0], shifted[63:32], shifted[95:64], shifted[127:96]} : shifted;
-
-  assign tomix = (dir)? (hStm^roundKey) : hStm;
-  omixcolumns  mx1(dir, tomix, mStm);
+  osubbytes sb1(dir, stm, bStm);
+  assign toshift = (!dir)? bStm : {bStm[31:0], bStm[63:32], bStm[95:64], bStm[127:96]};
+  shiftrows sr1(toshift, shifted);  
+  assign hStm  = (!dir)? shifted : {shifted[31:0], shifted[63:32], shifted[95:64], shifted[127:96]};
+  assign tomix = (!dir)? hStm    : (hStm^roundKey);
+  omixcolumns mx1(dir, tomix, mStm);
 
   // next cipher state logic
   always_comb
-    // if      (state == S0) nextStm = in^roundKey;                   // cycle 1
-    // else
-    if (!done) nextStm = (dir)? mStm : (mStm^roundKey); // cycles 2-10
-    else       nextStm = hStm^roundKey;                 // cycle 11
+    if       (state == S0)           nextStm =         in   ^ roundKey;        // cycle 1
+    else if ((state == S1) & !done)  nextStm = (!dir)? mStm ^ roundKey : mStm; // cycles 2-10
+    else if ((state == S1) &  done)  nextStm =         hStm ^ roundKey;        // cycle 11
+    else                             nextStm =         stm;                    // resting
 
   // output logic
   assign out = nextStm;

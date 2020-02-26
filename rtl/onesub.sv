@@ -17,8 +17,8 @@
 */
 
 module osubbytes(input logic dir,
-                  input  logic [127:0] a,
-                output logic [127:0] y);
+                 input  logic [127:0] a,
+                 output logic [127:0] y);
 
   osubword sw0(dir, a[127:96], y[127:96]);
   osubword sw1(dir, a[95:64],  y[95:64]);
@@ -39,8 +39,8 @@ endmodule
 */
 
 module osubword (input logic dir,
-                input  logic [31:0] word,
-                output logic [31:0] subbed);
+                 input  logic [31:0] word,
+                 output logic [31:0] subbed);
 
   osbyte sb0(dir, word[31:24], subbed[31:24]);
   osbyte sb1(dir, word[23:16], subbed[23:16]);
@@ -54,41 +54,24 @@ module osbyte (input logic dir,
               input logic [7:0] a,
               output logic [7:0] y);
 
+  logic [7:0] inversebox[0:255];
   logic [7:0] b, invaff, aff, index, tbl;
-  parameter logic [7:0] c = 8'h63;
-  parameter logic [7:0] invc = 8'h05;
+  initial $readmemh("../AES-Accel/rtl/inverse.txt", inversebox);
+  parameter logic [7:0] c = 8'h63, invc = 8'h05;
 
-  genvar i;
-  generate
-    for (i = 0; i < 8; i++) begin: invaffine
-      assign invaff[i] = a[(i+2)%8] ^ a[(i+5)%8] ^ a[(i+7)%8] ^ invc[i];
+  always_comb
+    for (int i = 0; i < 8; i++) begin
+      invaff[i] = a[(i+2)%8] ^ a[(i+5)%8] ^ a[(i+7)%8] ^ invc[i];
     end
-  endgenerate
-
-  assign index = (dir)? invaff : a;
-
-  logic [7:0] sbox[0:255];
-  initial $readmemh("../AES-Accel/rtl/sbox.txt", sbox);
-
-  assign tbl = sbox[index];
-
-  generate
-    for (i = 0; i < 8; i++) begin: affine
-      assign aff[i] = tbl[i] ^ tbl[(i+4)%8] ^ tbl[(i+5)%8] ^ tbl[(i+6)%8] ^ tbl[(i+7)%8] ^ c[i];
+    
+  assign index = (!dir)? a : invaff;
+  assign tbl = inversebox[index];
+    
+  always_comb
+    for (int i = 0; i < 8; i++) begin
+      aff[i] = tbl[i] ^ tbl[(i+4)%8] ^ tbl[(i+5)%8] ^ tbl[(i+6)%8] ^ tbl[(i+7)%8] ^ c[i];
     end
-  endgenerate
 
-  assign y = (dir)? tbl : aff;
-
-  // logic [7:0] invsbox[0:255];
-  // initial $readmemh("../AES-Accel/rtl/invsbox.txt", invsbox);
-
-  // logic [7:0] sbox[0:255];
-  // initial $readmemh("../AES-Accel/rtl/sbox.txt", sbox);
-
-  // logic [7:0] dirbox[0:255];
-
-  // assign dirbox = (dir)? invsbox : sbox;
-  // assign y = dirbox[a];
+  assign y = (!dir)? aff : tbl;
 
 endmodule

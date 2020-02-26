@@ -51,7 +51,6 @@ module cipher (input  logic         clk,
   // next state logic
   always_comb
     case(state)
-      // START:         nextstate = S0;
       S0:            nextstate = S1;
       S1: if (done)  nextstate = S2;
           else       nextstate = S1;

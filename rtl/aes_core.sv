@@ -21,6 +21,7 @@
 
   Parameters:
     K:                        the length of the key
+    C: Size of the Counter in bits
 
   Inputs:
     clk:               sytem clock signal
@@ -39,40 +40,45 @@
 */
 
 module aes_core #(parameter K = 128, INV = 1)
-                 (input  logic         clk, reset,
+                 (input  logic         clk,
                   input  logic         ce,
                   input  logic [K-1:0] key,
                   input  logic [127:0] message,
-                  // input  logic         dir,          // 0 is fwd
+                  input  logic         asyncdir,          // 0 is fwd
                   output logic         done2,
                   output logic [127:0] translated);
 
-  parameter logic [3:0] cycles = (K == 128)? 4'b1011 : (K == 192)? 4'b1101 : 4'b1111;
-  parameter countsize = (INV == 0)? 4 : 5;
+  parameter logic [3:0] CYCLES = (K == 128)? 4'b1011 : (K == 192)? 4'b1101 : 4'b1111;
+  parameter C = (INV == 0)? 4 : 5;
+  logic [127:0] roundKey;
+  logic [C-1:0] countval;
+  logic         slwclk, done1, predone, dir;
 
-  logic [127:0]         roundKey;
-  logic [countsize-1:0] countval;
-  logic                 slwclk, done1, predone;
+  always_ff @(posedge clk) if (countval == 0) dir <= asyncdir;
 
+  // counter for cipher and expansion step
+  counter #(C) cnt(clk, ce, !done2, 1'b1, countval);
 
-  // generate 5 MHz clock for cycles
-  // clk_gen #(5 * (10**6)) sck(clk, reset, 1'b1, slwclk);
-
-  // counter for cipher and expansion steps
-  counter #(countsize) cnt(clk, ce, !done2, 1'b1, countval);
-
-  // send key a 4-word key schedule to cipher each cycle
+  // send cipher a 4-word key schedule to transform message each cycle
   expand  #(K, INV) ke0(clk, ce, done1, done2, predone, key, roundKey);
-
+  
+  // ciphering
   generate
     if (INV == 0) cipher    ci0(clk, ce, done1, roundKey, message, translated);
-    if (INV == 1) invcipher in0(clk, ce | (countval <= cycles-1'b1), done2, roundKey, message, translated);
+    if (INV == 1) invcipher in0(clk, (countval <= CYCLES-1'b1), done2, roundKey, message, translated);
+    if (INV == 2) ocipher   oc0(clk, ce | (dir & (countval <= CYCLES-1'b1)), done2, dir, roundKey, message, translated);
   endgenerate
-  // ocipher      ci0(clk, ce | (dir & (countval == cycles-1'b1)), done2, dir, roundKey, message, translated);
 
-  assign done1 = (countval >= cycles - 1'b1);
-  assign done2 = (INV == 0)? done1 : (countval == 2*(cycles - 1'b1));
-  // assign done2 = (dir)? (countval == 2*cycles) : done1;
-  assign predone = (countval == cycles - 2'b10);
-
+  // done signals based on counter
+  always_comb begin
+    predone = (countval == CYCLES - 2'b10);
+    done1   = (countval >= CYCLES - 1'b1);
+    if (INV == 0) done2 = done1;
+    if (INV == 1) done2 = (countval == 2*(CYCLES - 1'b1));
+    if (INV == 2) done2 = (!dir)? done1 : (countval == 2*(CYCLES-1'b1));
+  end
 endmodule
+
+// generate 5 MHz clock for cycles
+// clk_gen #(5 * (10**6)) sck(clk, ce, 1'b1, slwclk);
+// (!dir)? ce : (countval <= CYCLES-1'b1)

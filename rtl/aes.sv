@@ -29,8 +29,8 @@
     translated[K-1:0]: encrypted K-bit message
 */
 
-module aes #(parameter K = 128, INV = 0)
-            (input  logic clk, reset,
+module aes #(parameter K = 128, INV = 2)
+            (input  logic clk,
              input  logic r_sclk,
              input  logic r_mosi,
              input  logic r_ce,
@@ -43,7 +43,7 @@ module aes #(parameter K = 128, INV = 0)
       // $error("** Illegal Condition ** Key size: %d Invalid for AES Encryption. Valid Key sizes: 128, 192, and 256", K);
       illegal_keylength_condition_triggered non_existing_module();
     end
-    if ( (INV != 1) & (INV != 0) ) begin
+    if ( (INV != 1) & (INV != 0) & (INV != 2) ) begin
       // $error("** Illegal Condition ** Key size: %d Invalid for AES Encryption. Valid Key sizes: 128, 192, and 256", K);
       illegal_keylength_condition_triggered non_existing_module();
     end
@@ -52,12 +52,15 @@ module aes #(parameter K = 128, INV = 0)
   logic [K-1:0] key;
   logic [127:0] message, translated;
   logic [7:0] dirByte;
+  logic ce_imd, ce;
 
-  // aes_spi  #(K) spi(r_sclk, r_mosi, done, translated, r_miso, key, message, dirByte);
-  // aes_core #(K) core(clk, reset, r_ce, key, message, dirByte[0], done, translated);
+  aes_spi  #(K, INV) spi(r_sclk, r_mosi, done, translated, r_miso, key, message, dirByte);
+  aes_core #(K, INV) core(clk, ce, key, message, dirByte[0], done, translated);
 
-  aes_spi  #(K) spi(r_sclk, r_mosi, done, translated, r_miso, key, message);
-  aes_core #(K, INV) core(clk, reset, r_ce, key, message, done, translated);
-
+  // synchronize reset
+  always_ff @(posedge clk) begin
+    ce_imd <= r_ce;
+    ce     <= ce_imd;
+  end
 
 endmodule
