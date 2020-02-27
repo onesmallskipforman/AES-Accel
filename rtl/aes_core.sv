@@ -54,7 +54,7 @@ module aes_core #(parameter K = 128, INV = 1)
   logic [C-1:0] countval;
   logic         slwclk, done1, predone, dir;
 
-  // only change dir when resetting translation with ce 
+  // only change dir when resetting translation with ce
   // (not needed when spi conditionally synchronized)
   always_ff @(posedge clk) if (ce) dir <= asyncdir;
 
@@ -63,7 +63,7 @@ module aes_core #(parameter K = 128, INV = 1)
 
   // send cipher a 4-word key schedule to transform message each cycle
   expand  #(K, INV) ke0(clk, ce, done1, done2, predone, key, roundKey);
-  
+
   // ciphering
   generate
     if (INV == 0) cipher    ci0(clk, ce, done1, roundKey, message, translated);

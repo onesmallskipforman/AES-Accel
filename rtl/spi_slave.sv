@@ -50,7 +50,7 @@ module spi_slave #(parameter N, M = N)
   // the (M-2)-th bit on the last sclk negedge will be the (M-1)-th bit for
   // the next posedge, which is what we want passed to miso on that next tick
   always_ff @(negedge sclk) begin
-    wasdone      <= done;      
+    wasdone      <= done;
     miso_delayed <= full_miso_captured[M-2];
   end
 

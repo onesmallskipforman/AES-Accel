@@ -60,7 +60,7 @@ module ocipher (input  logic         clk,
   // cipher state transformation logic
   osubbytes sb1(dir, stm, bStm);
   assign toshift = (!dir)? bStm : {bStm[31:0], bStm[63:32], bStm[95:64], bStm[127:96]};
-  shiftrows sr1(toshift, shifted);  
+  shiftrows sr1(toshift, shifted);
   assign hStm  = (!dir)? shifted : {shifted[31:0], shifted[63:32], shifted[95:64], shifted[127:96]};
   assign tomix = (!dir)? hStm    : (hStm^roundKey);
   omixcolumns mx1(dir, tomix, mStm);

@@ -71,10 +71,10 @@ module aes #(parameter K = 192, INV = 1)
   //   ce_i <= r_ce;
   //   ce   <= ce_i;
   //   {key_i, message_i, dirByte_i} <= {key_a, message_a, dirByte_a};
-    
+
   //   unconditional synchronization
   //   {key, message, dirByte} <= {key_i, message_i, dirByte_i};
-   
+
   //   conditional synchronization
   //   if (ce) {key, message, dirByte} <= {key_i, message_i, dirByte_i};
   // end

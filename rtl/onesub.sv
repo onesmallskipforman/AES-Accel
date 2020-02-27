@@ -63,10 +63,10 @@ module osbyte (input logic dir,
     for (int i = 0; i < 8; i++) begin
       invaff[i] = a[(i+2)%8] ^ a[(i+5)%8] ^ a[(i+7)%8] ^ invc[i];
     end
-    
+
   assign index = (!dir)? a : invaff;
   assign tbl = inversebox[index];
-    
+
   always_comb
     for (int i = 0; i < 8; i++) begin
       aff[i] = tbl[i] ^ tbl[(i+4)%8] ^ tbl[(i+5)%8] ^ tbl[(i+6)%8] ^ tbl[(i+7)%8] ^ c[i];
