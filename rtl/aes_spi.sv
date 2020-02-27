@@ -59,11 +59,11 @@ module aes_spi #(parameter K = 128, INV)
 
   // miso should change on the negative edge of sclk
   always_ff @(negedge sclk) begin
-      wasdone = done;
+      wasdone <= done;
 
       // the 126-th bit on the last sclk negedge will be the 127-th bit for
       // the next posedge, which is what we want passed to miso on that next tick
-      miso_delayed = translatedcaptured[126];
+      miso_delayed <= translatedcaptured[126];
   end
 
   // when done is first asserted, shift out msb before clock edge

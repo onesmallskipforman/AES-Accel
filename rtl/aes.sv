@@ -29,7 +29,7 @@
     translated[K-1:0]: encrypted K-bit message
 */
 
-module aes #(parameter K = 128, INV = 2)
+module aes #(parameter K = 192, INV = 1)
             (input  logic clk,
              input  logic r_sclk,
              input  logic r_mosi,

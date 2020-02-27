@@ -45,16 +45,22 @@ module aes_core #(parameter K = 128, INV = 1)
                   input  logic [K-1:0] key,
                   input  logic [127:0] message,
                   input  logic         asyncdir,          // 0 is fwd
-                  output logic         done2,
+                  output logic         done,
                   output logic [127:0] translated);
 
   parameter logic [3:0] CYCLES = (K == 128)? 4'b1011 : (K == 192)? 4'b1101 : 4'b1111;
   parameter C = (INV == 0)? 4 : 5;
   logic [127:0] roundKey;
   logic [C-1:0] countval;
-  logic         slwclk, done1, predone, dir;
+  logic         slwclk, done1, done2, predone, dir, was_ce;
 
-  always_ff @(posedge clk) if (countval == 0) dir <= asyncdir;
+  initial done <= 0; 
+
+  always_ff @(posedge clk) begin
+    if (countval == 0) dir <= asyncdir;
+    if ( (!ce & was_ce) | done2 ) done <= done2;
+    was_ce <= ce;
+  end
 
   // counter for cipher and expansion step
   counter #(C) cnt(clk, ce, !done2, 1'b1, countval);
