@@ -83,6 +83,7 @@ module aes #(parameter K = 192, INV = 1)
 
   //   conditional synchronization
   //   if (ce) {key, message, dirByte} <= {key_i, message_i, dirByte_i};
+  //   if (!ce & was_ce) {key, message, dirByte} <= {key_i, message_i, dirByte_i}; // this one only allows changes on load complete, requires was_ce as reset for proper timing
   // end
   // aes_spi  #(K, INV) spi(r_sclk, r_mosi, done, translated, r_miso, key_a, message_a, dirByte_a);
   // aes_core #(K, INV) core(clk, ce, key, message, dirByte[0], done, translated);

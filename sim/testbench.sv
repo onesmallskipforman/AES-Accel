@@ -6,7 +6,7 @@
 module testbench();
 
   // number of key bits
-  parameter K = 128, INV = 2;
+  parameter K = 256, INV = 2;
 
   logic clk, load, done, sck, sdi, sdo;
   logic [K-1:0] key;
@@ -18,7 +18,7 @@ module testbench();
   // device under test
   aes #(K, INV) dut(clk, sck, sdi, load, sdo, done);
 
-  assign dirByte = 8'hFF;
+  assign dirByte = 8'h00;
 
   initial begin
     if (K == 128) begin
@@ -52,10 +52,6 @@ module testbench();
       clk = 1'b1; #5;
     end
 
-  initial begin
-    i = 0;
-    load = 1'b1;
-  end
 
   assign {message, expected} = ((INV == 0) | ((INV == 2) & (dirByte == 8'h00)))?
     {plaintext, cyphertext} : {cyphertext, plaintext};
@@ -63,25 +59,71 @@ module testbench();
   assign comb = {dirByte, message, key};
   parameter total = (INV != 2)? K + 128 : K + 128 + 8;
 
-  // shift in test vectors, wait until done, and shift out result
+  rpi_sim #(K+128+8,128) rpi(clk, done, sdo, comb, expected, sdi, sck, load);
+
+  // initial begin
+  //   i = 0;
+  //   load = 1'b1;
+  // end
+
+  // // shift in test vectors, wait until done, and shift out result
+  // always @(posedge clk) begin
+  //   if (i == total) load = 1'b0;
+  //   if (i<total) begin
+  //     // load = 1'b1;
+  //     #1; sdi = comb[total-1-i];
+  //     #1; sck = 1; #5; sck = 0;
+  //     i = i + 1;
+  //   end else if (done && i < (total + 128) ) begin
+  //     #1; sck = 1;
+  //     #1; translated[total+128-1-i] = sdo;
+  //     #4; sck = 0;
+  //     i = i + 1;
+  //   end else if (i == total + 128) begin
+  //     if (translated == expected)
+  //       $display("Testbench ran successfully");
+  //     else
+  //       $display("Error: translated = %h, expected %h", translated, expected);
+  //     $stop();
+  //   end
+  // end
+
+endmodule
+
+
+module rpi_sim #(parameter N, M = N)
+                (input  logic         clk, done,
+                 input  logic         miso,
+                 input  logic [N-1:0] full_mosi,
+                 input  logic [M-1:0] expected,
+                 output logic         mosi, sck, load);
+
+  logic [M-1:0] full_miso;
+  logic [9:0] i;
+
+  initial begin
+    i = 0;
+    load = 1'b1;
+  end
+
   always @(posedge clk) begin
-    if (i == total) load = 1'b0;
-    if (i<total) begin
-      // load = 1'b1;
-      #1; sdi = comb[total-1-i];
+    if (i == N) load = 1'b0;
+    if (i < N) begin
+      #1; mosi = full_mosi[N-1-i];
       #1; sck = 1; #5; sck = 0;
       i = i + 1;
-    end else if (done && i < (total + 128) ) begin
+    end else if (done && i < (N + 128) ) begin
       #1; sck = 1;
-      #1; translated[total+128-1-i] = sdo;
+      #1; full_miso[N+128-1-i] = miso;
       #4; sck = 0;
       i = i + 1;
-    end else if (i == total + 128) begin
-      if (translated == expected)
+    end else if (i == N + 128) begin
+      if (full_miso == expected)
         $display("Testbench ran successfully");
       else
-        $display("Error: translated = %h, expected %h", translated, expected);
+        $display("Error: translated = %h, expected %h", full_miso, expected);
       $stop();
+      // i = i + 1;
     end
   end
 
