@@ -6,14 +6,14 @@
 
   Below is a module that performs the cipher function for 128-bit AES
   encryption. This module runs 4 steps of the algorithm at a time,
-  allowing 128-, 192-, and 128-bit encyption encryption to complete
+  allowing 128-, 192-, and 256-bit encyption encryption to complete
   11 cycles, 13 cycles, and 15 cycles, respectively.
 
   Inputs:
     clk:               sytem clock signal
     reset:             reset signal to restart cypher process
     done:             done/disable bit signalling encryption completed
-    roundKey[127:0]:   block of Nk=4 words generated in a cycle of key expansion
+    roundKey[127:0]:   block of 4 words generated in a cycle of key expansion
     in[127:0]:         128-bit message to encrypt
 
   Outputs:

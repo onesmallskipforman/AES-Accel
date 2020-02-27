@@ -4,15 +4,16 @@
   12/10/2019
   AES cipher module
 
-  Below is a module that performs the inverse cipher function for 128-bit AES
-  encryption. This module runs 4 steps of the 44-step algorithm at a time,
-  allowing for the encryption to complete in 11 cycles.
+  Below is a module that performs the inverse cipher function for AES
+  decryption. This module runs 4 steps of the algorithm at a time,
+  allowing 128-, 192-, and 256-bit encyption to complete
+  22 cycles, 26 cycles, and 30 cycles, respectively.
 
   Inputs:
     clk:               sytem clock signal
     reset:             reset signal to restart cypher process
     done:              done bit signalling encryption completed
-    roundKey[127:0]:     block of Nk=4 words generated in a cycle of key expansion
+    roundKey[127:0]:   block of 4 words generated in a cycle of key expansion
     in[127:0]:         128-bit message to encrypt
 
   Outputs:
@@ -25,6 +26,7 @@
     ibStm[127:0]:    inverse subBytes transform applied to ihStm
     rStm[127:0]:     addRoundKey transform applied to ibStm
     imStm[127:0]:    inverse mixColumns transform applied to hStm
+    wasdone1:          signals if done1 was high on last clock tick
 */
 
 module invcipher (input  logic         clk,

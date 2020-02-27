@@ -2,12 +2,12 @@
   Robert "Skipper" Gonzalez
   sgonzalez@g.hmc.edu
   12/10/2019
-  column mixing algorithm modules
+  inverse column mixing algorithm modules
 */
 
 /*
-  Below is a module for the mixcolumns transform on the
-  AES encryption state matrix, as seen in Section 5.1.3, Figure 9
+  Below is a module for the inverse mixcolumns transform on the
+  AES decryption state matrix, as seen in Section 5.1.3, Figure 9
   of FIPS-197 (see docs)
 
   Inputs:
@@ -28,8 +28,8 @@ module invmixcolumns(input  logic [127:0] a,
 endmodule
 
 /*
-  Below is a module for the inverse mixcolumns transform on the
-  AES encryption state matrix. Seen EQ(5) from E. Ahmed et al,
+  Below is a module for the inverse mixcolumn transform on the
+  AES decryption state matrix. Seen EQ(5) from E. Ahmed et al,
   Lightweight Mix Columns Implementation for AES, AIC09 for this
   hardware implementation (found in docs).
 

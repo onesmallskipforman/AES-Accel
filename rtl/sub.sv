@@ -7,7 +7,7 @@
 
 /*
   Below is a module for sbox substitution for every byte in a
-  128-bit AES state matrix.
+  AES encryption state matrix.
 
   Inputs:
     a[127:0]: 128-bit state matrix

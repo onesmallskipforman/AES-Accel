@@ -2,12 +2,12 @@
   Robert "Skipper" Gonzalez
   sgonzalez@g.hmc.edu
   12/10/2019
-  sbox substitution modules
+  invsbox substitution modules
 */
 
 /*
   Below is a module for sbox substitution for every byte in a
-  128-bit AES state matrix.
+  AES decryption state matrix.
 
   Inputs:
     a[127:0]: 128-bit state matrix
@@ -48,7 +48,7 @@ module invsubword (input  logic [31:0] word,
 endmodule
 
 /*
-  Below is a module for sbox the infamous AES byte
+  Below is a module for inverse sbox the infamous AES byte
   substitution with magic numbers.
 
   Inputs:

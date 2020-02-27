@@ -2,36 +2,34 @@
   Robert "Skipper" Gonzalez
   sgonzalez@g.hmc.edu
   12/10/2019
-  AES 128-bit key expansion
+  AES 256-bit key expansion
 
-  Below is a module that performs the keyexpansion function for K-bit AES
+  Below is a module that performs the key expansion function for 256-bit AES
   encryption. This module runs 4 steps of the algorithm at a time,
-  allowing 128-, 192-, and 128-bit encyption encryption to complete
-  11 cycles, 13 cycles, and 15 cycles, respectively.
-
-  Parameters:
-    K:                        the length of the key
+  allowing 256-bit encyption to complete in 15 cycles.
 
   Inputs:
-    clk:              sytem clock signal
-    reset:            reset signal to restart cypher process
-    done:             done/disable bit signalling encryption completed
-    key[K-1:0]:       K-bit encryption key
+    clk:        sytem clock signal
+    reset:      reset signal to restart cypher process
+    done:       bit signalling encryption complete
+    key[255:0]: 256-bit encryption key
 
   Outputs:
-    roundKey[127:0]:    block of four words generated in current cycle of key expansion
+    roundKey[127:0]: 4-word round key generated in current cycle of expansion
 
   Internal Variables:
-    wBlock[127:0]:    block of K words generated for the expanded key
-    rcon[31:0]:       round constant word array for the first step of the current cycle
-    rotTemp[31:0]:    rotWord transform applied to last cylce's wBlock
-    subTemp[31:0]:    subWord transform applied to rotTemp
-    subOrgTemp[31:0]: subWord transform applied to last cylce's wBlock
-    finalTemp[31:0]:  final temp value to be XOR'ed with lastBlock[127:96]
-    rconTemp[31:0]:   XOR between subWord and rcon
-    lastBlock[127:0]: last word from the expansion block from the last cycle
-    temp[127:0]:      temporary storage for wBlock for cycles 2-10
-    rconFront[7:0]:   First word in rcon
+    block[255:0]:      block of 8 words generated for the expanded key
+    nextBlock[255:0]:  next block of 8 words generated for the expanded key
+    temp[127:0]:       next 4 words generated for the block
+    replace[127:0]:    4 words from block to be transformed and replaced by temp
+    rcon[31:0]:        round constant word array
+    nextrcon[31:0]:    next round constant word array
+    rotTemp[31:0]:     rotWord transform applied to block
+    subTemp[31:0]:     subWord transform applied to rotTemp
+    transform[31:0]:   4 words to be rotated into rotTemp
+    rconTemp[31:0]:    XOR between subWord and rcon
+    rconFront[7:0]:    First word in rcon after galois mult to nextrcon
+    tosub[31:0]:       4 words to be substituted into subTemp
 */
 
 module expand256 (input  logic          clk, reset,

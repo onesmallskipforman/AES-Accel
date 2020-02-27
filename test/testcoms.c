@@ -6,7 +6,6 @@
 #include <string.h>
 #include "EasyPIO.h"
 
-
 //==============================================================================
 // Constants
 //==============================================================================
@@ -89,7 +88,8 @@ int main(void) {
 // Functions
 //==============================================================================
 
-void printall(char *key, char *message, char *translated, int keysize, char *expected, int inv) {
+void printall(char *key, char *message, char *translated, int keysize,
+              char *expected, int inv) {
   if (inv == 0) {printf("%d-bit AES Encryption\n", keysize);}
   else          {printf("%d-bit AES Decryption\n", keysize);}
 

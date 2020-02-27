@@ -2,14 +2,15 @@
   Robert "Skipper" Gonzalez
   sgonzalez@g.hmc.edu
   12/10/2019
-  sbox substitution modules
+  sbox and invsbox substitution modules
 */
 
 /*
   Below is a module for sbox substitution for every byte in a
-  128-bit AES state matrix.
+  AES state matrix.
 
   Inputs:
+    dir:      inverse AES signal
     a[127:0]: 128-bit state matrix
 
   Outputs:
@@ -32,6 +33,7 @@ endmodule
   32-bit word.
 
   Inputs:
+    dir:          inverse signal
     word[31:0]:   32-bit word
 
   Outputs:
@@ -49,6 +51,19 @@ module osubword (input logic dir,
 
 endmodule
 
+/*
+  Below is a module for sbox and inverse sbox the infamous AES byte
+  substitution with magic numbers. A single table of inverses in GF(2^8) is
+  stored, and affine transformations are used to get the sbox and inverse sbox
+  values.
+
+  Inputs:
+    dir:    inverse signal
+    a[7:0]: input byte
+
+  Outputs:
+    y[7:0]: sbox substituted byte
+*/
 
 module osbyte (input logic dir,
               input logic [7:0] a,

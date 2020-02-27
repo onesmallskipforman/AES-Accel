@@ -4,34 +4,27 @@
   12/10/2019
   AES 128-bit key expansion
 
-  Below is a module that performs the keyexpansion function for K-bit AES
+  Below is a module that performs the key expansion function for 128-bit AES
   encryption. This module runs 4 steps of the algorithm at a time,
-  allowing 128-, 192-, and 128-bit encyption encryption to complete
-  11 cycles, 13 cycles, and 15 cycles, respectively.
-
-  Parameters:
-    K:                        the length of the key
+  allowing 128-bit encyption to complete in 11 cycles.
 
   Inputs:
-    clk:              sytem clock signal
-    reset:            reset signal to restart cypher process
-    done:             done/disable bit signalling encryption completed
-    key[K-1:0]:       K-bit encryption key
+    clk:        sytem clock signal
+    reset:      reset signal to restart cypher process
+    done:       bit signalling encryption complete
+    key[127:0]: 128-bit encryption key
 
   Outputs:
-    roundKey[127:0]:    block of four words generated in current cycle of key expansion
+    block[127:0]: 4-word round key generated in current cycle of expansion
 
   Internal Variables:
-    wBlock[127:0]:    block of K words generated for the expanded key
-    rcon[31:0]:       round constant word array for the first step of the current cycle
-    rotTemp[31:0]:    rotWord transform applied to last cylce's wBlock
+    nextBlock[127:0]: next block of 4 words generated for the expanded key
+    rcon[31:0]:       round constant word array
+    nextrcon[31:0]:   next round constant word array
+    rotTemp[31:0]:    rotWord transform applied to block
     subTemp[31:0]:    subWord transform applied to rotTemp
-    subOrgTemp[31:0]: subWord transform applied to last cylce's wBlock
-    finalTemp[31:0]:  final temp value to be XOR'ed with lastBlock[127:96]
     rconTemp[31:0]:   XOR between subWord and rcon
-    lastBlock[127:0]: last word from the expansion block from the last cycle
-    temp[127:0]:      temporary storage for wBlock for cycles 2-10
-    rconFront[7:0]:   First word in rcon
+    rconfront[7:0]:   First word in rcon after galois mult to nextrcon
 */
 
 module expand128 (input  logic          clk, reset,
@@ -39,8 +32,8 @@ module expand128 (input  logic          clk, reset,
                   input  logic [127:0]  key,
                   output logic [127:0]  block);
 
-  logic [31:0]  rcon, nextrcon, rotTemp, subTemp, rconTemp;
   logic [127:0] nextBlock;
+  logic [31:0]  rcon, nextrcon, rotTemp, subTemp, rconTemp;
   logic [7:0]   rconFront;
 
   always_ff @(posedge clk) begin

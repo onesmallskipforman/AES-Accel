@@ -12,23 +12,24 @@
   and spi communication resumes (spi after done is first asserted).
 
   Parameters:
-    K:                        the length of the key
+    N: mosi length in bits
+    M: miso length in bits
 
   Inputs:
-    sclk:                     spi master clock signal
-    mosi:                     input from spi master
-    done:                     done bit signalling encryption completed
-    translated[127:0]:         decrypted 128-bit message
+    sclk:              spi master clock signal
+    mosi:              input from spi master
+    done:              done bit signalling encryption completed
+    translated[127:0]: decrypted 128-bit message
 
   Outputs:
-    miso:                     output to spi master
-    key[K:0]:               128-bit encryption key
-    message[127:0]:        encrpyted 128-bit message
+    miso:           output to spi master
+    key[K:0]:       128-bit encryption key
+    message[127:0]: encrpyted 128-bit message
 
   Internal Vars:
     wasdone:                   done bit from the last tick of sclk
     miso_delayed:              MSB of translatedcaptured from last clock tick
-    translatedcaptured[127:0]:  decrypted message bits shifted out to miso
+    translatedcaptured[127:0]: decrypted message bits shifted out to miso
 */
 
 module spi_slave #(parameter N, M = N)

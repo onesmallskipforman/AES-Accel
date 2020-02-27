@@ -28,7 +28,7 @@ module mixcolumns(input  logic [127:0] a,
 endmodule
 
 /*
-  Below is a module for the mixcolumns transform on the
+  Below is a module for the mixcolumn transform on the
   AES encryption state matrix. Seen EQ(4) from E. Ahmed et al,
   Lightweight Mix Columns Implementation for AES, AIC09 for this
   hardware implementation (found in docs).

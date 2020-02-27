@@ -14,6 +14,7 @@
   Outputs:
     y[127:0]: shiftrows-transformed state matrix
 */
+
 module shiftrows(input  logic [127:0] a,
                  output logic [127:0] y);
 

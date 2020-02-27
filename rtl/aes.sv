@@ -6,11 +6,12 @@
 
   Below is the top level module for an AES hardware accelerator. This module
   is designed to recieve key and message from a rasberry pi over SPI
-  communication, and then perform AES encryption. 128-, 192-, and 256-bit AES
-  Encryptions are supported.
+  communication, and then perform AES encryption/decryption.
+  128-, 192-, and 256-bit AES are supported.
 
   Parameters:
     K:      the length of the key
+    INV:    encryption type (0: encryption, 1: decryption, 2: both)
 
   Inputs:
     clk:    sytem clock signal
@@ -25,8 +26,9 @@
 
   Internal Variables:
     key[K-1:0]:        K-bit encryption key
-    message[K-1:0]:  unecrpyted K-bit message
-    translated[K-1:0]: encrypted K-bit message
+    message[K-1:0]:    untranslated K-bit message
+    translated[K-1:0]: translated K-bit message
+    dirByte[7:0]:      byte whose LSB contains direction signal (1 is reverse)
 */
 
 module aes #(parameter K = 192, INV = 1)
@@ -49,10 +51,10 @@ module aes #(parameter K = 192, INV = 1)
     end
   endgenerate
 
-  logic [K-1:0] key_a, key_i, key;
-  logic [127:0] message_a, message_i, message, translated;
-  logic [7:0] dirByte_a, dirByte_i, dirByte;
-  logic ce_i, ce, was_ce, was_was_ce, reset_core;
+  logic [K-1:0] key;
+  logic [127:0] message, translated;
+  logic [7:0] dirByte;
+  logic ce;
 
   // assert load
   // apply 256 sclks to shift in key and message, starting with message[0]
@@ -66,6 +68,10 @@ module aes #(parameter K = 192, INV = 1)
   aes_core #(K, INV) core(clk, r_ce, key, message, dirByte[0], done, translated);
 
   // synchronizer options
+  // logic [K-1:0] key_a, key_i;
+  // logic [127:0] message_a, message_i;
+  // logic [7:0] dirByte_a, dirByte_i;
+  // logic ce_i
   // always_ff @(posedge clk) begin
   //   chip enable synchronization
   //   ce_i <= r_ce;

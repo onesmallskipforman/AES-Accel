@@ -1,7 +1,7 @@
-/////////////////////////////////////////////
+//==============================================================================
 // testbench
 //   Tests AES with cases from FIPS-197 appendix
-/////////////////////////////////////////////
+//==============================================================================
 
 module testbench();
 
@@ -23,24 +23,24 @@ module testbench();
   initial begin
     if (K == 128) begin
       // Test case from FIPS-197 Appendix A.1, B
-      key       <= 128'h2B7E151628AED2A6ABF7158809CF4F3C;
-      plaintext <= 128'h3243F6A8885A308D313198A2E0370734;
-      cyphertext  <= 128'h3925841D02DC09FBDC118597196A0B32;
+      key        <= 128'h2B7E151628AED2A6ABF7158809CF4F3C;
+      plaintext  <= 128'h3243F6A8885A308D313198A2E0370734;
+      cyphertext <= 128'h3925841D02DC09FBDC118597196A0B32;
       // Alternate test case from Appendix C.1
       // key       <= 128'h000102030405060708090A0B0C0D0E0F;
       // plaintext <= 128'h00112233445566778899AABBCCDDEEFF;
       // cyphertext  <= 128'h69C4E0D86A7B0430D8CDB78070B4C55A;
     end else if (K == 192) begin
       // 192-bit test case from Appendix C.2
-      cyphertext  <= 128'hdda97ca4864cdfe06eaf70a0ec0d7191;
-      plaintext <= 128'h00112233445566778899aabbccddeeff;
-      key       <= 192'h000102030405060708090a0b0c0d0e0f1011121314151617;
+      cyphertext <= 128'hdda97ca4864cdfe06eaf70a0ec0d7191;
+      plaintext  <= 128'h00112233445566778899aabbccddeeff;
+      key        <= 192'h000102030405060708090a0b0c0d0e0f1011121314151617;
       // key <= 192'h8e73b0f7da0e6452c810f32b809079e562f8ead2522c6b7b;
     end else begin
       // 256-bit test case from Appendix C.3
-      cyphertext  <= 128'h8ea2b7ca516745bfeafc49904b496089;
-      plaintext <= 128'h00112233445566778899aabbccddeeff;
-      key       <= 256'h000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f;
+      cyphertext <= 128'h8ea2b7ca516745bfeafc49904b496089;
+      plaintext  <= 128'h00112233445566778899aabbccddeeff;
+      key        <= 256'h000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f;
       // key <= 256'h603deb1015ca71be2b73aef0857d77811f352c073b6108d72d9810a30914dff4;
     end
   end
