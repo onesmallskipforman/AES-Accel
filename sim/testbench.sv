@@ -6,7 +6,7 @@
 module testbench();
 
   // number of key bits
-  parameter K = 192, INV = 2;
+  parameter K = 128, INV = 2;
 
   logic clk, load, done, sck, sdi, sdo;
   logic [K-1:0] key;
@@ -18,7 +18,7 @@ module testbench();
   // device under test
   aes #(K, INV) dut(clk, sck, sdi, load, sdo, done);
 
-  assign dirByte = 8'h00;
+  assign dirByte = 8'hFF;
 
   // test case
   initial begin
@@ -75,8 +75,7 @@ module testbench();
 
   initial begin
     i = 0;
-    // #10;
-    // load = 1'b0; #10; load = 1'b1;
+    load = 1'b1;
   end
 
   assign comb = {dirByte, plaintext, key};
@@ -85,14 +84,13 @@ module testbench();
   // shift in test vectors, wait until done, and shift out result
   always @(posedge clk) begin
     if (i == total) load = 1'b0;
-    if (i == total + 128) load = 1'b0;
+    // if (i == total + 128) load = 1'b0;
     if (i<total) begin
-      load = 1'b1;
+      // load = 1'b1;
       #1; sdi = comb[total-1-i];
       #1; sck = 1; #5; sck = 0;
       i = i + 1;
     end else if (done && i < (total + 128) ) begin
-      load = 1'b1;
       #1; sck = 1;
       #1; cyphertext[total+128-1-i] = sdo;
       #4; sck = 0;
@@ -100,7 +98,7 @@ module testbench();
     end else if (i == total + 128) begin
       if (cyphertext == expected)
         $display("Testbench ran successfully");
-      else 
+      else
         $display("Error: cyphertext = %h, expected %h", cyphertext, expected);
       $stop();
     end

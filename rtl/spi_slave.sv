@@ -18,52 +18,43 @@
     sclk:                     spi master clock signal
     mosi:                     input from spi master
     done:                     done bit signalling encryption completed
-    plaintext[127:0]:         decrypted 128-bit message
+    translated[127:0]:         decrypted 128-bit message
 
   Outputs:
     miso:                     output to spi master
-    key[K:0]:                 128-bit encryption key
-    cyphertext[127:0]:        encrpyted 128-bit message
+    key[K:0]:               128-bit encryption key
+    message[127:0]:        encrpyted 128-bit message
 
   Internal Vars:
     wasdone:                   done bit from the last tick of sclk
-    miso_delayed:              MSB of plaintextcaptured from last clock tick
-    plaintextcaptured[127:0]:  decrypted message bits shifted out to miso
+    miso_delayed:              MSB of translatedcaptured from last clock tick
+    translatedcaptured[127:0]:  decrypted message bits shifted out to miso
 */
 
-module spi_slave #(parameter N)
-                  (input  logic         clk,
-                   input  logic         sclk,
-                   input  logic         ce,
+module spi_slave #(parameter N, M = N)
+                  (input  logic         sclk,
                    input  logic         mosi,
-                   input  logic [N-1:0] full_miso,
+                   input  logic         done,
+                   input  logic [M-1:0] full_miso,
                    output logic         miso,
-                   output logic [N-1:0] full_mosi,
-                   output logic         spi_done);
+                   output logic [N-1:0] full_mosi);
 
-  logic         miso_delayed, was_ce, nce_i;
-  logic [N-1:0] shift_miso, full_mosi_a, full_mosi_i;
+  logic         miso_delayed, wasdone;
+  logic [M-1:0] full_miso_captured;
 
-  // synchronizers for spi completion and mosi
-  always_ff @(posedge clk) begin
-    nce_i       <= !ce;
-    spi_done    <= nce_i;
-    full_mosi_i <= full_mosi_a;
-    full_mosi   <= full_mosi_i;
-  end
-
-  // assert load
   always_ff @(posedge sclk)
-    if (!was_ce) {shift_miso, full_mosi_a} = {full_miso, full_mosi_a[N-2:0], mosi};
-    else         {shift_miso, full_mosi_a} = {shift_miso[N-2:0], full_mosi_a, mosi};
+    if (!wasdone)  {full_miso_captured, full_mosi} = {full_miso, full_mosi[N-2:0], mosi};
+    else           {full_miso_captured, full_mosi} = {full_miso_captured[M-2:0], full_mosi, mosi};
 
   // miso should change on the negative edge of sclk
-  always_ff @(negedge sclk, posedge ce) begin
-    was_ce <= ce;
-    miso_delayed <= shift_miso[N-2];
+  // the (M-2)-th bit on the last sclk negedge will be the (M-1)-th bit for
+  // the next posedge, which is what we want passed to miso on that next tick
+  always_ff @(negedge sclk) begin
+    wasdone      <= done;      
+    miso_delayed <= full_miso_captured[M-2];
   end
 
   // when done is first asserted, shift out msb before clock edge
-  assign miso = (ce & !was_ce) ? full_miso[N-1] : miso_delayed;
+  assign miso = (done & !wasdone) ? full_miso[M-1] : miso_delayed;
 
 endmodule

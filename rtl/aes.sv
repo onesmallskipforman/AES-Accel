@@ -49,18 +49,36 @@ module aes #(parameter K = 192, INV = 1)
     end
   endgenerate
 
-  logic [K-1:0] key;
-  logic [127:0] message, translated;
-  logic [7:0] dirByte;
-  logic ce_imd, ce;
+  logic [K-1:0] key_a, key_i, key;
+  logic [127:0] message_a, message_i, message, translated;
+  logic [7:0] dirByte_a, dirByte_i, dirByte;
+  logic ce_i, ce, was_ce, was_was_ce, reset_core;
 
-  aes_spi  #(K, INV) spi(r_sclk, r_mosi, done, translated, r_miso, key, message, dirByte);
-  aes_core #(K, INV) core(clk, ce, key, message, dirByte[0], done, translated);
+  // assert load
+  // apply 256 sclks to shift in key and message, starting with message[0]
+  // then deassert load, wait until done
+  // then apply 128 sclks to shift out translated, starting with translated[0]
+  generate
+    if (INV == 2) spi_slave #(K + 128 + 8, 128) spi(r_sclk, r_mosi, done, translated, r_miso, {dirByte, message, key});
+    else          spi_slave #(K + 128, 128)     spi(r_sclk, r_mosi, done, translated, r_miso, {message, key});
+  endgenerate
 
-  // synchronize reset
-  always_ff @(posedge clk) begin
-    ce_imd <= r_ce;
-    ce     <= ce_imd;
-  end
+  aes_core #(K, INV) core(clk, r_ce, key, message, dirByte[0], done, translated);
+
+  // synchronizer options
+  // always_ff @(posedge clk) begin
+  //   chip enable synchronization
+  //   ce_i <= r_ce;
+  //   ce   <= ce_i;
+  //   {key_i, message_i, dirByte_i} <= {key_a, message_a, dirByte_a};
+    
+  //   unconditional synchronization
+  //   {key, message, dirByte} <= {key_i, message_i, dirByte_i};
+   
+  //   conditional synchronization
+  //   if (ce) {key, message, dirByte} <= {key_i, message_i, dirByte_i};
+  // end
+  // aes_spi  #(K, INV) spi(r_sclk, r_mosi, done, translated, r_miso, key_a, message_a, dirByte_a);
+  // aes_core #(K, INV) core(clk, ce, key, message, dirByte[0], done, translated);
 
 endmodule
